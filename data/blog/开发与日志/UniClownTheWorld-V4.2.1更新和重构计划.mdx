@@ -1,0 +1,95 @@
+---
+postId: 269
+title: "UniClownTheWorld V4.2.1更新和重构计划"
+date: "2018-09-06 05:42:13"
+lastmod: "2020-02-05 03:41:01"
+tags: ['开发与日志','开发','更新','重构']
+draft: false
+summary: "## UniClownTheWorld V4.2.1和重构计划  修复底部栏的标签页无法跳转"
+images: []
+authors: ['default']
+---
+## UniClownTheWorld V4.2.1和重构计划
+
+修复底部栏的标签页无法跳转
+
+调整底部标签数量
+
+修复标签云的显示效果
+
+### 重构
+### 表events
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| title |  string  | ""  | 标题  |
+| started_at  | datetime  | null  | 开始时间  |
+| ended_at | datetime | null | 结束时间 |
+| locate | string | "" | 地址 |
+| logo | id | null | |
+| content  | text ||||
+| status |
+
+### 表posts
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| title |  string  | ""  | 标题  |
+| user_id | int | ||
+| content | text | ||
+| is_synced | int |1|1：未同步；2：已同步|
+| event_id | int |||
+| visit_count | int | 0 |浏览数 |
+
+### 表comments
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| name | string | ||
+| content | string | ||
+| post_id | int ||||
+
+### 表photos
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+|title |  string  | ""  | 标题  |
+|url| string|""|图片地址|
+|photoable_type| string | "" ||
+|photoable_id| int | null |||
+
+### 表users
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| name |  string  | ""  | 名字  |
+| avatar | string | "" | 头像 |
+
+### 表user_events
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| user_id |  int  | ""  | 用户id  |
+| event_id | int | "" | 事件id |
+| type | int | 1 | 1: 发起者; 2: 参与者; 3: 订阅者 |
+
+
+### 表todolists
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| post_id | int | 0 | post_id|
+| status  | int | 1 | 1:未开始 2:进行中 3:已关闭|
+| done_at | datetime | null | 完成时间 |
+| ended_at | datetime | null | 截止时间 |
+| start_at | datetime | null | 开始时间 | 
+
+### 表todos
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| content | string | "" | 内容 |
+| status | int | 1 | 1:未完成;2:已完成;3:已删除|
+| done_at | datetime | null | 完成时间 |
+| deleted_at | datetime | null | 删除时间 |
+
+### 表todo_logs
+| 名字  | 类型  | 默认  | 备注  |
+| ------------ | ------------ | ------------ | ------------ |
+| user_id | int |  | 用户 |
+| type | int | 1 | 1:添加了事项; 2:删除了事项; 3：完成了事项； |
+| todo_id | int |  | todo事项id|
+
+ 

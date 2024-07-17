@@ -1,0 +1,52 @@
+---
+postId: 330
+title: "OMV upgrade4to5"
+date: "2021-01-07 09:36:22"
+lastmod: "2021-01-07 09:36:22"
+tags: ['开发与日志']
+draft: false
+summary: "On a test OMV 4.x system with the flashmemory plugin installed, this is all I did to upgrade it to OMV 5.x (as root):  "
+images: []
+authors: ['default']
+---
+On a test OMV 4.x system with the flashmemory plugin installed, this is all I did to upgrade it to OMV 5.x (as root):
+
+
+
+I changed this to a script (no changes but eliminates the cut&paste issues:
+
+
+wget -O - https://github.com/OpenMediaVault-Plugin-Developers/installScript/raw/master/upgrade4to5 | sudo bash
+
+
+
+reboot
+
+
+
+apt-get purge openmediavault-omvextrasorg resolvconf
+wget -O - https://github.com/OpenMediaVault-Plugin-Developers/packages/raw/master/install | bash
+apt-get update
+apt-get dist-upgrade
+
+omv-salt deploy run nginx
+
+omv-salt deploy run phpfpm
+
+apt-get install usrmerge
+
+omv-confdbadm migrate conf 5.0.0
+
+
+
+
+
+Clear your browser cache after upgrading!
+
+omv 5.5.21 usul | 64 bit | 5.4 proxmox kernel | omvextrasorg 5.4.2
+omv-extras.org plugins source code and issue tracker - github
+
+
+
+Please read this before posting a question.
+Please don't PM for support... Too many PMs!

@@ -1,0 +1,177 @@
+---
+postId: 186
+title: ""
+date: "2017-11-08 20:25:53"
+lastmod: "2020-02-05 03:40:48"
+tags: ['开发与日志']
+draft: false
+summary: "UCTW V4.0   服务器做了一次迁移，从heroku搬到了GCP"
+images: []
+authors: ['default']
+---
+## UCTW V4.0 
+
+服务器做了一次迁移，从heroku搬到了GCP
+老是坐在heroku也不是办法，虽然部署还算方便，也是免费的机房
+但是总想试着部署到自己的服务器上，方便今后的扩展
+GCP有一年免费和300美金赠送，而且速度快的可怕
+搬迁过程中遇到了很多问题
+还好都有解决方法
+这里汇总一下内容
+方便下次迁移
+
+### 数据库的迁移
+heroku线上使用的是postgres
+GCP上我打算使用mysql
+
+1. 首先从heroku备份数据库
+`heroku pg:backups:capture`
+2. 下载最新的备份latest.dump
+`heroku pg:backups:download`
+3. 将备份还原到本地pg数据库中
+`pg_restore --verbose --clean --no-acl --no-owner -h localhost -U myuser -d mydb latest.dump`
+4. 用本地pg数据库导出sql
+`pg_dump -U myuser -s mydb --inserts --format p -f pg.sql `
+5. [pg2mysql](http://www.lightbox.ca/pg2mysql.php)将pg.sql的语句转化为Mysql的语句获得mysql.sql
+6. 服务器执行
+`rake db:migrate RAILS_ENV=production`
+7. 删除mysql.sql中的数据迁移表，然后导入
+8. 配置 数据库 自动备份 [详见](y.oschina.net/u/231017/blog/186447)
+
+其实6、7两步是可以简化的，直接导入mysql.sql到mysql中就可以了，不需要rails去建立数据库
+
+### ROR的部署
+采用的是nginx+unicorn的配置
+
+#### 编译静态文件
+`$ RAILS_ENV=production rake assets:clean`
+`$ RAILS_ENV=production rake assets:precompile`
+
+#### 配置文件unicorn.rb
+
+```ruby
+module Rails
+  class <<self
+    def root
+      File.expand_path(__FILE__).split('/')[0..-3].join('/')
+    end
+  end
+end
+
+worker_processes 4
+
+working_directory Rails.root
+
+listen "#{Rails.root}/tmp/sockets/socket", :backlog => 64
+
+timeout 30
+
+pid "#{Rails.root}/tmp/pids/unicorn.pid"
+
+stderr_path "#{Rails.root}/log/unicorn.log"
+stdout_path "#{Rails.root}/log/unicorn.log"
+
+# combine Ruby 2.0.0dev or REE with "preload_app true" for memory savings
+# http://rubyenterpriseedition.com/faq.html#adapt_apps_for_cow
+preload_app true
+GC.respond_to?(:copy_on_write_friendly=) and
+  GC.copy_on_write_friendly = true
+
+check_client_connection false
+
+before_fork do |server, worker|
+  # the following is highly recomended for Rails + "preload_app true"
+  # as there's no need for the master process to hold a connection
+  defined?(ActiveRecord::Base) and
+    ActiveRecord::Base.connection.disconnect!
+
+  old_pid = "#{server.config[:pid]}.oldbin"
+  if File.exists?(old_pid) && old_pid != server.pid
+    begin
+      sig = (worker.nr + 1) >= server.worker_processes ? :QUIT : :TTOU
+      Process.kill(sig, File.read(old_pid).to_i)
+    rescue Errno::ENOENT, Errno::ESRCH
+    end
+  end
+  
+  # Throttle the master from forking too quickly by sleeping.  Due
+  # to the implementation of standard Unix signal handlers, this
+  # helps (but does not completely) prevent identical, repeated signals
+  # from being lost when the receiving process is busy.
+  sleep 1
+end
+
+after_fork do |server, worker|
+
+  # the following is *required* for Rails + "preload_app true",
+  defined?(ActiveRecord::Base) and
+    ActiveRecord::Base.establish_connection
+
+  # if preload_app is true, then you may also want to check and
+  # restart any other shared sockets/descriptors such as Memcached,
+  # and Redis.  TokyoCabinet file handles are safe to reuse
+  # between any number of forked children (assuming your kernel
+  # correctly implements pread()/pwrite() system calls)
+end
+```
+
+#### unicorn的运行方法
+`unicorn_rails -c /path/to/app/config/unicorn.rb -D -E production`
+
+#### unicorn的热部署
+```bash
+sudo kill -USR2 `cat path/to/app/tmp/pids/unicorn.pid`
+```
+因为unicorn的设置中有多个进程，所以需要多次执行此操作
+
+#### nginx的配置文件
+
+```
+upstream app{
+  server unix:///path/to/app/tmp/sockets/socket;
+}
+server {
+  listen 80;
+  server_name app;
+  root path/to/app/public;
+  try_files $uri/index.html $uri.html $uri @app;
+  location ~ ^/(assets)/ {
+    expires max;
+    add_header Cache-Control public;
+  }
+  location ~ .*\.(php|sql|asp)?$ {
+    deny all;
+  }
+  location @app {
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_redirect off;
+    proxy_pass http://app;
+  }
+  location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$
+  {
+    expires 30d;
+  }
+  location ~ .*\.(js|css)?$
+  {
+    expires 1h;
+  }
+  access_log logs/app.log;
+}
+
+
+```
+### 安装mysql、php、phpmysql
+https://www.digitalocean.com/community/tutorials/how-to-install-linux-nginx-mysql-php-lemp-stack-in-ubuntu-16-04
+
+### 搜索引擎优化
+添加了sitemap
+通过/sitemap.xml访问
+添加了百度的统计api
+
+### TODO
+1. 数据库的备份到网盘
+2. wechat中的投票项目
+3. 与微信项目的联动
+

@@ -1,0 +1,95 @@
+---
+postId: 3084
+title: "目前为止学到的东西"
+date: "2022-02-23 07:59:41"
+lastmod: "2022-02-23 08:01:39"
+tags: ['Sway']
+draft: false
+summary: "# 目前为止学到的东西  ## 剪贴板"
+images: []
+authors: ['default']
+---
+# 目前为止学到的东西
+
+## 剪贴板
+
+wl-copy
+wl-pasty
+wl-clipboard
+clipman
+
+## workspace like dwm
+https://gitlab.com/hyask/swaysome
+
+
+## bar
+swaybar
+
+## inactive window alpha
+```
+python ~/.config/sway/inactive-windows-transparency.py
+```
+
+## show icon in workspace tab
+sworkstyle
+
+
+## chrome自动使用wayland
+chrome://flags/#ozone-platform-hint
+设置成auto
+
+
+## wayland chrome无法使用输入法
+
+安装gtk4
+启动chrome时增加参数
+
+```
+google-chrome-stable --gtk-version=4
+```
+
+
+## GTK 主题无法工作
+
+在sway config中用gsettings 手动设置gtk中的配置变量
+可以通过这个脚本,自动设置
+```sh
+#!/bin/sh
+
+# usage: import-gsettings
+config="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini"
+if [ ! -f "$config" ]; then exit 1; fi
+
+gnome_schema="org.gnome.desktop.interface"
+gtk_theme="$(grep 'gtk-theme-name' "$config" | sed 's/.*\s*=\s*//')"
+icon_theme="$(grep 'gtk-icon-theme-name' "$config" | sed 's/.*\s*=\s*//')"
+cursor_theme="$(grep 'gtk-cursor-theme-name' "$config" | sed 's/.*\s*=\s*//')"
+font_name="$(grep 'gtk-font-name' "$config" | sed 's/.*\s*=\s*//')"
+gsettings set "$gnome_schema" gtk-theme "$gtk_theme"
+gsettings set "$gnome_schema" icon-theme "$icon_theme"
+gsettings set "$gnome_schema" cursor-theme "$cursor_theme"
+gsettings set "$gnome_schema" font-name "$font_name"
+```
+
+## GTK主题的位置
+```
+~/.themes
+```
+
+
+## wake up from usb
+```
+ echo enabled > /sys/bus/usb/devices/usb1/power/wakeup
+ echo enabled > /sys/bus/usb/devices/usb2/power/wakeup
+ echo enabled > /sys/bus/usb/devices/usb3/power/wakeup
+ echo enabled > /sys/bus/usb/devices/usb4/power/wakeup
+```
+
+## 系统启动执行
+```
+/etc/rc.local
+```
+
+
+## [swayprop](https://gitlab.com/wef/dotfiles/-/blob/master/bin/sway-prop)
+
