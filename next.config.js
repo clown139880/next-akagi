@@ -88,6 +88,9 @@ module.exports = () => {
         },
       ]
     },
+    experimental: {
+      reactCompiler: true,
+    },
     webpack: (config, options) => {
       config.module.rules.push({
         test: /\.svg$/,
