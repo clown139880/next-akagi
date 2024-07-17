@@ -99,8 +99,6 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
       : p.slug === slug
   )
 
-  console.log('slug', slug, postIndex)
-
   if (postIndex === -1) {
     return notFound()
   }
@@ -110,8 +108,6 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
   const post = allBlogs.find((p) =>
     slug.startsWith('posts/') && p.postId ? slug == 'posts/' + p.postId : p.slug === slug
   ) as Blog
-
-  console.log('post', post)
 
   const authorList = post?.authors || ['default']
   const authorDetails = authorList.map((author) => {
