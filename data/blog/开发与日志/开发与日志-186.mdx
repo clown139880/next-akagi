@@ -1,15 +1,16 @@
 ---
 postId: 186
-title: ""
-date: "2017-11-08 20:25:53"
-lastmod: "2020-02-05 03:40:48"
+title: ''
+date: '2017-11-08 20:25:53'
+lastmod: '2020-02-05 03:40:48'
 tags: ['开发与日志']
 draft: false
-summary: "UCTW V4.0   服务器做了一次迁移，从heroku搬到了GCP"
+summary: 'UCTW V4.0   服务器做了一次迁移，从heroku搬到了GCP'
 images: []
 authors: ['default']
 ---
-## UCTW V4.0 
+
+## UCTW V4.0
 
 服务器做了一次迁移，从heroku搬到了GCP
 老是坐在heroku也不是办法，虽然部署还算方便，也是免费的机房
@@ -21,29 +22,32 @@ GCP有一年免费和300美金赠送，而且速度快的可怕
 方便下次迁移
 
 ### 数据库的迁移
+
 heroku线上使用的是postgres
 GCP上我打算使用mysql
 
 1. 首先从heroku备份数据库
-`heroku pg:backups:capture`
+   `heroku pg:backups:capture`
 2. 下载最新的备份latest.dump
-`heroku pg:backups:download`
+   `heroku pg:backups:download`
 3. 将备份还原到本地pg数据库中
-`pg_restore --verbose --clean --no-acl --no-owner -h localhost -U myuser -d mydb latest.dump`
+   `pg_restore --verbose --clean --no-acl --no-owner -h localhost -U myuser -d mydb latest.dump`
 4. 用本地pg数据库导出sql
-`pg_dump -U myuser -s mydb --inserts --format p -f pg.sql `
+   `pg_dump -U myuser -s mydb --inserts --format p -f pg.sql `
 5. [pg2mysql](http://www.lightbox.ca/pg2mysql.php)将pg.sql的语句转化为Mysql的语句获得mysql.sql
 6. 服务器执行
-`rake db:migrate RAILS_ENV=production`
+   `rake db:migrate RAILS_ENV=production`
 7. 删除mysql.sql中的数据迁移表，然后导入
 8. 配置 数据库 自动备份 [详见](y.oschina.net/u/231017/blog/186447)
 
 其实6、7两步是可以简化的，直接导入mysql.sql到mysql中就可以了，不需要rails去建立数据库
 
 ### ROR的部署
+
 采用的是nginx+unicorn的配置
 
 #### 编译静态文件
+
 `$ RAILS_ENV=production rake assets:clean`
 `$ RAILS_ENV=production rake assets:precompile`
 
@@ -62,7 +66,8 @@ worker_processes 4
 
 working_directory Rails.root
 
-listen "#{Rails.root}/tmp/sockets/socket", :backlog => 64
+listen "#{Rails.root}/tmp/sockets/socket", :backlog =>
+64
 
 timeout 30
 
@@ -93,7 +98,7 @@ before_fork do |server, worker|
     rescue Errno::ENOENT, Errno::ESRCH
     end
   end
-  
+
   # Throttle the master from forking too quickly by sleeping.  Due
   # to the implementation of standard Unix signal handlers, this
   # helps (but does not completely) prevent identical, repeated signals
@@ -116,12 +121,15 @@ end
 ```
 
 #### unicorn的运行方法
+
 `unicorn_rails -c /path/to/app/config/unicorn.rb -D -E production`
 
 #### unicorn的热部署
+
 ```bash
 sudo kill -USR2 `cat path/to/app/tmp/pids/unicorn.pid`
 ```
+
 因为unicorn的设置中有多个进程，所以需要多次执行此操作
 
 #### nginx的配置文件
@@ -162,16 +170,19 @@ server {
 
 
 ```
+
 ### 安装mysql、php、phpmysql
+
 https://www.digitalocean.com/community/tutorials/how-to-install-linux-nginx-mysql-php-lemp-stack-in-ubuntu-16-04
 
 ### 搜索引擎优化
+
 添加了sitemap
 通过/sitemap.xml访问
 添加了百度的统计api
 
 ### TODO
+
 1. 数据库的备份到网盘
 2. wechat中的投票项目
 3. 与微信项目的联动
-

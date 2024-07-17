@@ -1,14 +1,15 @@
 ---
 postId: 230
-title: ""
-date: "2018-03-09 23:32:08"
-lastmod: "2020-02-05 03:41:00"
-tags: ['Laravel学习笔记','Laravel']
+title: ''
+date: '2018-03-09 23:32:08'
+lastmod: '2020-02-05 03:41:00'
+tags: ['Laravel学习笔记', 'Laravel']
 draft: false
-summary: "Laravel API开发实践  ### 1. 创建模型"
+summary: 'Laravel API开发实践  ### 1. 创建模型'
 images: []
 authors: ['default']
 ---
+
 ## Laravel API开发实践
 
 ### 1. 创建模型
@@ -19,7 +20,7 @@ $ php artisan make:model Lesson -m
 
 --migration or -m 代表自动创建一个数据库迁移文件
 
-### 2.  创建数据库迁移
+### 2. 创建数据库迁移
 
 ```
 Schema::create('lessonss', function (Blueprint $table) {
@@ -52,7 +53,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 $api = app('Dingo\Api\Routing\Router');
 $api->version('v1', function ($api) {
-    $api->group(['namespace' => 'App\Api\Controllers'], function ($api) {
+    $api->group(['namespace' =>
+'App\Api\Controllers'], function ($api) {
         $api->get('lessons', 'LessonsController@index');
         $api->get('lessons/{id}', 'LessonsController@show');
     });
@@ -65,7 +67,7 @@ $api->version('v1', function ($api) {
 public function index()
 {
     $lessons =  Lesson::all();
-    
+
     return response()->json($data);
 }
 ```
@@ -81,9 +83,12 @@ class LessonTransformer extends TransformerAbstract
     public function transform(Lesson $lesson)
     {
         return [
-            'title' => $lesson['title'],
-            'content' => $lesson['body'],
-            'is_free' => (boolean)$lesson['free']
+            'title' =>
+$lesson['title'],
+            'content' =>
+$lesson['body'],
+            'is_free' =>
+(boolean)$lesson['free']
         ];
     }
 }
@@ -101,6 +106,7 @@ public function index()
 ```
 
 ### 9.使用Dingo的helpers
+
 ```
 use Dingo\Api\Routing\Helpers;
 
@@ -110,5 +116,3 @@ class Controller extends BaseController
 
 }
 ```
-
-
