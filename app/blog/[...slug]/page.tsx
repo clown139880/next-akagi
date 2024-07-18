@@ -94,9 +94,7 @@ export default async function Page({ params }: { params: { slug: string[] } }) {
   // Filter out drafts in production
   const sortedCoreContents = allCoreContent(sortPosts(allBlogs))
   const postIndex = sortedCoreContents.findIndex((p) =>
-    p.slug === slug && slug.startsWith('posts/') && p.postId
-      ? slug == 'posts/' + p.postId
-      : p.slug === slug
+    slug.startsWith('posts/') && p.postId ? slug == 'posts/' + p.postId : p.slug === slug
   )
 
   if (postIndex === -1) {
