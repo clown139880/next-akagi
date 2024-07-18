@@ -8,7 +8,7 @@ import { genPageMetadata } from 'app/seo'
 import { Metadata } from 'next'
 
 export async function generateMetadata({ params }: { params: { tag: string } }): Promise<Metadata> {
-  const tag = decodeURI(params.tag)
+  const tag = decodeURI(decodeURI(params.tag))
   return genPageMetadata({
     title: tag,
     description: `${siteMetadata.title} ${tag} tagged content`,
@@ -31,7 +31,7 @@ export const generateStaticParams = async () => {
 }
 
 export default function TagPage({ params }: { params: { tag: string } }) {
-  const tag = decodeURI(params.tag)
+  const tag = decodeURI(decodeURI(params.tag))
 
   console.log(tag, params.tag)
   // Capitalize first letter and convert space to dash
@@ -40,7 +40,10 @@ export default function TagPage({ params }: { params: { tag: string } }) {
     sortPosts(
       allBlogs.filter(
         (post) =>
-          post.tags && (post.tags.includes(tag) || post.tags.map((t) => slug(t)).includes(tag))
+          post.tags &&
+          (post.tags.includes(tag) ||
+            post.tags.map((t) => slug(t)).includes(tag) ||
+            post.tags.map((t) => encodeURI(t)).includes(params.tag))
       )
     )
   )
