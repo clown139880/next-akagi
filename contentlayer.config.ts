@@ -157,7 +157,7 @@ export default makeSource({
     cwd: process.cwd(),
     remarkPlugins: [
       remarkExtractFrontmatter,
-      [remarkGfm, { singleTilde: false }],
+      [remarkGfm, { singleTilde: true }],
       remarkCodeTitles,
       remarkMath,
       remarkImgToJsx,
