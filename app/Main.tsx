@@ -51,16 +51,8 @@ export default function Home({ posts }) {
                             ))}
                           </div>
                         </div>
-                        <div className="prose max-w-none text-gray-500 dark:text-gray-400">
-                          {!title ? (
-                            <MDXLayoutRenderer
-                              code={post.body.code}
-                              components={components}
-                              toc={post.toc}
-                            />
-                          ) : (
-                            summary
-                          )}
+                        <div className="prose max-w-none whitespace-break-spaces  text-gray-500 dark:text-gray-400">
+                          {summary}
                         </div>
                       </div>
                       <div className="text-base font-medium leading-6">
