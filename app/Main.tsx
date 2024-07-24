@@ -3,6 +3,8 @@ import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import { formatDate } from 'pliny/utils/formatDate'
 import NewsletterForm from 'pliny/ui/NewsletterForm'
+import { MDXLayoutRenderer } from 'pliny/mdx-components'
+import { components } from '@/components/MDXComponents'
 
 const MAX_DISPLAY = 5
 
@@ -50,7 +52,15 @@ export default function Home({ posts }) {
                           </div>
                         </div>
                         <div className="prose max-w-none text-gray-500 dark:text-gray-400">
-                          {summary}
+                          {!title ? (
+                            <MDXLayoutRenderer
+                              code={post.body.code}
+                              components={components}
+                              toc={post.toc}
+                            />
+                          ) : (
+                            summary
+                          )}
                         </div>
                       </div>
                       <div className="text-base font-medium leading-6">
