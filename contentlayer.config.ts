@@ -108,7 +108,7 @@ export const Blog = defineDocumentType(() => ({
     lastmod: { type: 'date' },
     draft: { type: 'boolean' },
     summary: { type: 'string' },
-    images: { type: 'json' },
+    images: { type: 'list', of: { type: 'string' }, default: [] },
     authors: { type: 'list', of: { type: 'string' } },
     layout: { type: 'string' },
     bibliography: { type: 'string' },

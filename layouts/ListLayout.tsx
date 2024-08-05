@@ -8,6 +8,7 @@ import type { Blog } from 'contentlayer/generated'
 import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
+import Image from 'next/image'
 
 interface PaginationProps {
   totalPages: number
@@ -113,7 +114,7 @@ export default function ListLayout({
         <ul>
           {!filteredBlogPosts.length && 'No posts found.'}
           {displayPosts.map((post) => {
-            const { path, date, title, summary, tags } = post
+            const { path, date, title, summary, tags, images } = post
             return (
               <li key={path} className="py-4">
                 <article className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
@@ -137,6 +138,15 @@ export default function ListLayout({
                     <div className="prose max-w-none text-gray-500 dark:text-gray-400">
                       {summary}
                     </div>
+                    {images?.[0] && (
+                      <Image
+                        src={images?.[0]}
+                        alt={`Cover Image for ${title}`}
+                        width={800}
+                        height={400}
+                        className="rounded-lg"
+                      />
+                    )}
                   </div>
                 </article>
               </li>
