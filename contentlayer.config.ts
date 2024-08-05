@@ -74,13 +74,14 @@ function createTagCount(allBlogs) {
         const formattedTag = slug(tag)
         if (formattedTag in tagCount) {
           tagCount[formattedTag].count += 1
-          if (tagCount[formattedTag].lastmod < file.dateModified) {
-            tagCount[formattedTag].lastmod = file.dateModified
+          const lastMod = file.lastmod || file.date
+          if (tagCount[formattedTag].lastmod < lastMod) {
+            tagCount[formattedTag].lastmod = lastMod
           }
         } else {
           tagCount[formattedTag] = {
             count: 1,
-            lastmod: file.dateModified,
+            lastmod: file.lastmod || file.date,
           }
         }
       })
