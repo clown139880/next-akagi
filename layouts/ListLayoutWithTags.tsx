@@ -70,9 +70,11 @@ export default function ListLayoutWithTags({
   pagination,
 }: ListLayoutProps) {
   const pathname = usePathname()
-  const tagCounts = tagData as Record<string, number>
+  const tagCounts = tagData as Record<string, { count: number; lastmod: string }>
   const tagKeys = Object.keys(tagCounts)
-  const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
+  const sortedTags = tagKeys.sort((a, b) =>
+    tagCounts[b].lastmod.localeCompare(tagCounts[a].lastmod)
+  )
 
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 

@@ -67,15 +67,21 @@ const computedFields: ComputedFields = {
  * Count the occurrences of all tags across blog posts and write to json file
  */
 function createTagCount(allBlogs) {
-  const tagCount: Record<string, number> = {}
+  const tagCount: Record<string, { count: number; lastmod: string }> = {}
   allBlogs.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
       file.tags.forEach((tag) => {
         const formattedTag = slug(tag)
         if (formattedTag in tagCount) {
-          tagCount[formattedTag] += 1
+          tagCount[formattedTag].count += 1
+          if (tagCount[formattedTag].lastmod < file.dateModified) {
+            tagCount[formattedTag].lastmod = file.dateModified
+          }
         } else {
-          tagCount[formattedTag] = 1
+          tagCount[formattedTag] = {
+            count: 1,
+            lastmod: file.dateModified,
+          }
         }
       })
     }
