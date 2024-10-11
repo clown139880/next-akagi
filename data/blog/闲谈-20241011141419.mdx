@@ -1,0 +1,15 @@
+---
+title: ''
+date: '2024-10-11 14:14:19'
+lastmod: '2024-10-11 14:14:19'
+tags: [闲谈]
+draft: false
+summary: ''
+images: []
+---
+- 14:13:52 
+	#PVE 上次折腾完以后，已知没法工作的N100上的windows，这次更新了驱动以后，又能完了
+	>args: -set device.hostpci0.addr=02.0 -set device.hostpci0.x-igd-gms=0x2 -set device.hostpci0.x-igd-opregion=on
+	要把最后这个配置删了才行
+	>-set device.hostpci0.x-igd-opregion=on
+	不过还是没想好要拿PVE中的windows做什么，本来是打算拿来给老婆做备用机的，但是现在这样到能用感觉还差很远
