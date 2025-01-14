@@ -1,0 +1,53 @@
+---
+title: '配置windows的ssh-server'
+date: '2025-01-14 12:36:34'
+lastmod: '2025-01-14 12:36:34'
+tags: []
+draft: false
+summary: ''
+images: []
+---
+更新了windows11的24H2以后，我的windows的ssh就停止工作了，查一下有很多说这个补丁有bug的，但是也有说已经有更新修复了这个问题  
+我查了一下，我这边遇到的问题是，ssh已经不自动启动了，所以没法工作  
+手动启动一下，发现只有内网能链接  
+又查了一下，确定是防火墙的问题，开启以后就解决了  
+所以他这个补丁，相当于把我的ssh的自动启动，防火墙全整没了  
+可怕  
+```powershell  
+# 需要管理员权限运行此脚本  
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {  
+    Write-Warning "请以管理员权限运行此脚本"  
+    Break  
+}  
+  
+# 确保 SSH 服务正在运行并设置为自动启动  
+Set-Service -Name sshd -StartupType 'Automatic'  
+Start-Service sshd  
+  
+# 移除可能存在的旧规则  
+Remove-NetFirewallRule -Name "SSH ZeroTier Access" -ErrorAction SilentlyContinue  
+  
+# 创建新的防火墙规则  
+New-NetFirewallRule `  
+    -Name "SSH ZeroTier Access" `  
+    -DisplayName "SSH ZeroTier Access" `  
+    -Description "Allow SSH traffic for ZeroTier" `  
+    -Direction Inbound `  
+    -Protocol TCP `  
+    -LocalPort 22 `  
+    -Action Allow `  
+    -Profile Domain,Private,Public  
+  
+Write-Host "防火墙规则已创建完成"  
+Write-Host "可以使用 'Get-NetFirewallRule -Name "SSH ZeroTier Access"' 查看规则详情"  
+```  
+  
+  
+将以上内容保存为 .ps1 文件，然后右键选择"以管理员身份运行 PowerShell"执行即可。  
+  
+这个脚本会：  
+  
+1. 检查管理员权限  
+2. 设置 SSH 服务为自动启动并启动服务  
+3. 移除同名的旧规则（如果存在）  
+4. 创建新的防火墙规则，允许所有网络配置文件（域、专用、公用）下的 SSH 访问  
