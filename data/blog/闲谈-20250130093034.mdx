@@ -1,0 +1,17 @@
+---
+title: ''
+date: '2025-01-30 09:30:34'
+lastmod: '2025-01-30 09:30:34'
+tags: [闲谈]
+draft: false
+summary: ''
+images: []
+---
+	在windows的openssh中自动使用powershell7作为默认终端
+	```vhdl
+	New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" `
+	                 -Name DefaultShell `
+	                 -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" `
+	                 -PropertyType String `
+	                 -Force
+	``` 
