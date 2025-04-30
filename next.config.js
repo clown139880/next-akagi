@@ -90,6 +90,7 @@ module.exports = () => {
     },
     experimental: {
       reactCompiler: true,
+      viewTransition: true,
     },
     webpack: (config, options) => {
       config.module.rules.push({
