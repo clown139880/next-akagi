@@ -1,0 +1,633 @@
+---
+images:
+  - https://akagi.oss-cn-hangzhou.aliyuncs.com/blog/202606/20260608143758.png
+title: 用 Windows Hello 解锁浏览器端 Bitwarden
+date: 2026-06-08 14:33:02
+lastmod: '2026-06-08 14:37:58'
+tags:
+  - Bitwarden
+  - windows
+draft: false
+summary: |-
+  我一直在用 Bitwarden 管理密码，也一直坚持一个原则：密码库可以方便，但绝不能敞着。可现实是，每次浏览器里的保险库锁定后都要重新输入主密码，安全是安全，久而久之也确实变成了日常负担。
+
+  于是我开始折腾一个更平衡的方案：在不降低安全性的前提下，用 Windows Hello 在浏览器中解锁 Bitwarden。中间踩过普通摄像头不支持 Windows Hello、自建 Vaultwarden 版本不兼容、Docker 拉镜像失败、Microsoft Store 版客户端不支持浏览器集成等一连串坑。
+
+  这篇文章记录的不是一组冷冰冰的配置命令，而是一次把安全和体验重新拉回平衡点的过程。最终目标很简单：保险库仍然会锁，但解锁不再像每天背诵开门咒语。
+---
+![image.png](https://akagi.oss-cn-hangzhou.aliyuncs.com/blog/202606/20260608143758.png)我一直在用 Bitwarden 浏览器扩展管理密码，但有一个很烦的问题：浏览器里的保险库每次锁定后，都要重新输入主密码。  
+  
+主密码当然安全，但日常使用频率一高，就会变成一种小型精神磨损。可是我又不想把 Bitwarden 设置成长期不锁。密码管理器这种东西，一旦为了方便牺牲太多安全性，就像把保险柜门虚掩着，然后安慰自己“应该没人会看”。  
+  
+所以我的目标很明确：  
+  
+> 浏览器端 Bitwarden 仍然保持锁定机制，但解锁时尽量不用每次输入主密码，而是通过 Windows Hello 完成。  
+  
+最终方案跑通了：  
+  
+```text  
+Bitwarden 浏览器扩展  
++ Bitwarden 桌面客户端  
++ 自建 Vaultwarden 服务  
++ Windows Hello  
+= 浏览器里通过 Windows Hello 解锁 Bitwarden  
+```  
+  
+---  
+  
+## 一、为什么不能只用浏览器扩展？  
+  
+最开始我以为，浏览器扩展本身应该就能调用 Windows Hello。  
+  
+实际不是这样。  
+  
+Bitwarden 浏览器扩展想要使用 Windows Hello 解锁，需要依赖 Bitwarden 桌面客户端。桌面客户端负责和系统认证能力打交道，浏览器扩展再通过“浏览器集成”调用桌面客户端。  
+  
+它们的关系大概是：  
+  
+```text  
+浏览器扩展：  
+负责网页自动填充、识别登录框、保存新密码  
+  
+桌面客户端：  
+负责本机保险库、Windows Hello、浏览器集成  
+```  
+  
+所以桌面客户端不是浏览器扩展的替代品。  
+装了桌面客户端之后，浏览器扩展依然要保留。  
+  
+否则每次登录网站都要从桌面端复制账号密码，体验会退化成“电子账本翻页术”。  
+  
+正确结构是：  
+  
+```text  
+Bitwarden 桌面端常驻  
+浏览器扩展继续负责网页填充  
+浏览器扩展通过桌面端调用 Windows Hello  
+```  
+  
+---  
+  
+## 二、Windows Hello 不要求必须登录 Microsoft 账号  
+  
+我这里的 Windows 没有登录 Microsoft 账号，所以一开始也担心：  
+  
+> 本地 Windows 账户还能不能用 Windows Hello？  
+  
+答案是：可以。  
+  
+Windows Hello 是 Windows 本机的认证机制，不等于 Microsoft 账号登录。只要系统里的 Windows Hello 能正常配置，Bitwarden 桌面端就可以调用它。  
+  
+检查路径是：  
+  
+```text  
+Windows 设置  
+→ 账户  
+→ 登录选项  
+→ Windows Hello  
+```  
+  
+如果这里可以配置 Windows Hello，那么 Bitwarden 理论上也可以使用它。  
+  
+---  
+  
+## 三、第一个坑：高清摄像头不等于 Windows Hello 摄像头  
+  
+我手上有罗技 C920，原本以为它是个不错的摄像头，应该可以用于 Windows Hello。  
+  
+结果发现：不行。  
+  
+这里有一个非常容易踩的坑：  
+  
+```text  
+高清摄像头 ≠ Windows Hello 摄像头  
+普通 USB 摄像头 ≠ Windows Hello 摄像头  
+视频会议摄像头 ≠ 系统认证摄像头  
+```  
+  
+C920 是一款很经典的视频会议摄像头，画质和兼容性都不错，但它不是 Windows Hello 摄像头。  
+  
+Windows Hello 人脸识别通常需要支持红外识别或其他符合要求的硬件。普通摄像头即使画面清晰，也不能直接用于系统级人脸认证。  
+  
+所以判断一款摄像头能不能用于 Windows Hello，不能只看：  
+  
+```text  
+1080p  
+4K  
+自动对焦  
+视频会议优化  
+品牌很好  
+```  
+  
+而要明确看它是否写着：  
+  
+```text  
+支持 Windows Hello  
+Windows Hello compatible  
+```  
+  
+这个坑非常像买了把漂亮钥匙，结果发现它只是个钥匙扣。  
+  
+---  
+  
+## 四、第二个坑：Windows Hello 摄像头插上没反应  
+  
+后来我找到了另一只支持 Windows Hello 的摄像头，但插上电脑后看起来没有反应。  
+  
+这里不能直接判断设备坏了，要分两层排查：  
+  
+```text  
+第一层：Windows 有没有识别到摄像头  
+第二层：Windows Hello 有没有识别到它是认证设备  
+```  
+  
+我用的排查顺序是：  
+  
+```text  
+1. 不插显示器 Hub、扩展坞、前置 USB  
+2. 直接插主板后置 USB  
+3. 确认连接线是数据线，不是纯供电线  
+4. 打开设备管理器  
+5. 插拔摄像头，看设备列表有没有刷新  
+```  
+  
+重点看这些分类：  
+  
+```text  
+摄像头 / Cameras  
+图像设备 / Imaging devices  
+生物识别设备 / Biometric devices  
+通用串行总线控制器  
+其他设备 / Unknown device  
+```  
+  
+不同情况对应不同方向：  
+  
+```text  
+插拔完全没变化：  
+优先怀疑线、USB 口、Hub、供电或设备硬件问题  
+  
+出现 Unknown device：  
+可能是驱动问题  
+  
+普通相机能用，但 Windows Hello 找不到兼容设备：  
+可能是普通视频部分识别了，但 Windows Hello 所需部分没有正常工作  
+```  
+  
+所以 Windows Hello 摄像头不是“插上有画面就一定能认证”，它可能有多个设备部分，需要系统完整识别。  
+  
+---  
+  
+## 五、第三个坑：自建 Vaultwarden 版本太旧，桌面客户端登录失败  
+  
+我的密码库不是 Bitwarden 官方云端，而是自建 Vaultwarden。  
+  
+一开始 Bitwarden 桌面客户端连接自建服务时，直接提示：  
+  
+```text  
+发生意外错误  
+Unexpected error  
+```  
+  
+这个错误很不友好，因为它没有告诉你到底是密码错了、服务挂了，还是接口不兼容。  
+  
+后面排查发现，问题很可能是：  
+  
+```text  
+新版 Bitwarden 客户端调用了新的接口  
+旧版 Vaultwarden 不支持  
+服务端返回错误  
+客户端只显示“发生意外错误”  
+```  
+  
+典型现象可能是服务端日志里出现类似：  
+  
+```text  
+POST /identity/accounts/prelogin/password  
+404 Not Found  
+```  
+  
+这类问题的解决方式是更新 Vaultwarden。  
+  
+由于我是用 `docker run` 跑的，不是 Docker Compose，所以更新逻辑是：  
+  
+```text  
+停止旧容器  
+备份数据目录  
+拉取新镜像  
+删除旧容器  
+用相同参数重建容器  
+```  
+  
+脱敏后的示例命令如下：  
+  
+```bash  
+VW_DATA="/path/to/vaultwarden-data"  
+CONTAINER_NAME="vaultwarden"  
+  
+docker stop "$CONTAINER_NAME"  
+  
+cp -a "$VW_DATA" "${VW_DATA}.backup.$(date +%F_%H%M%S)"  
+  
+docker pull vaultwarden/server:latest  
+  
+docker rm "$CONTAINER_NAME"  
+  
+docker run -d \  
+  --restart=always \  
+  --name "$CONTAINER_NAME" \  
+  -v "$VW_DATA":/data/ \  
+  -p <host-port>:80 \  
+  vaultwarden/server:latest  
+```  
+  
+注意，真正重要的是数据目录：  
+  
+```text  
+容器可以删除  
+镜像可以更新  
+但挂载到 /data 的宿主机目录不能乱删  
+```  
+  
+更新后可以检查版本：  
+  
+```bash  
+docker exec vaultwarden /vaultwarden --version  
+```  
+  
+查看日志：  
+  
+```bash  
+docker logs --tail=100 vaultwarden  
+```  
+  
+Vaultwarden 更新后，桌面客户端登录问题解决。  
+  
+---  
+  
+## 六、第四个坑：Docker daemon 的代理不是当前终端代理  
+  
+更新 Vaultwarden 时，又遇到了 Docker 拉镜像失败。  
+  
+一开始的报错大意是：  
+  
+```text  
+Docker daemon 尝试通过某个代理访问 Docker Hub  
+但代理连接失败  
+```  
+  
+这里的重点是：  
+  
+```text  
+docker pull 真正联网的是 Docker daemon  
+不是当前 shell 里的 docker 命令本身  
+```  
+  
+所以这种方式不一定有效：  
+  
+```bash  
+HTTP_PROXY= docker pull vaultwarden/server:latest  
+```  
+  
+因为它只影响当前命令环境，不一定影响 dockerd。  
+  
+如果代理是通过 systemd 给 Docker daemon 配置的，可以临时创建一个 systemd override 来取消代理：  
+  
+```bash  
+sudo mkdir -p /run/systemd/system/docker.service.d  
+  
+sudo tee /run/systemd/system/docker.service.d/99-no-proxy.conf >/dev/null <<'EOF'  
+[Service]  
+UnsetEnvironment=HTTP_PROXY HTTPS_PROXY ALL_PROXY NO_PROXY http_proxy https_proxy all_proxy no_proxy  
+EOF  
+  
+sudo systemctl daemon-reload  
+sudo systemctl restart docker  
+```  
+  
+确认代理状态：  
+  
+```bash  
+docker info | grep -i proxy  
+```  
+  
+拉完镜像后，如果需要恢复原来的代理配置，可以删除这个临时 override：  
+  
+```bash  
+sudo rm /run/systemd/system/docker.service.d/99-no-proxy.conf  
+sudo systemctl daemon-reload  
+sudo systemctl restart docker  
+```  
+  
+这个方法的好处是：  
+  
+```text  
+不修改原始代理配置  
+只临时覆盖 Docker daemon 的环境变量  
+系统重启后 /run 下的配置也会消失  
+```  
+  
+像给 Docker 临时戴了个静音罩，不是拆发动机。  
+  
+---  
+  
+## 七、第五个坑：取消代理后，Docker Hub 直连超时  
+  
+取消 Docker daemon 代理后，原来的代理错误消失了，但又出现了新的错误：  
+  
+```text  
+context deadline exceeded  
+```  
+  
+这说明问题变了：  
+  
+```text  
+之前是代理不可用  
+现在是直连 Docker Hub 超时  
+```  
+  
+在国内网络环境下，这并不罕见。  
+  
+这时有几种选择：  
+  
+```text  
+1. 修好 Docker daemon 的代理，继续走可靠代理  
+2. 在另一台能访问 Docker Hub 的机器上拉镜像，再 docker save/load 搬过去  
+3. 使用公开镜像加速服务临时拉取  
+```  
+  
+对于密码库这种服务，我更偏向前两种。  
+如果只是临时更新一次，也可以使用可信度较高的公开镜像加速服务救急。  
+  
+---  
+  
+## 八、第六个坑：清华源不是 Docker Hub 镜像仓库  
+  
+我一开始还想找清华大学那种比较靠谱的源。  
+  
+这里也有一个概念误区：  
+  
+```text  
+清华 TUNA 的 Docker CE 源  
+不是 Docker Hub 镜像仓库  
+```  
+  
+它适合安装或更新 Docker 本体，例如：  
+  
+```text  
+docker-ce  
+docker-ce-cli  
+containerd.io  
+docker-compose-plugin  
+```  
+  
+但它不能替代：  
+  
+```bash  
+docker pull vaultwarden/server:latest  
+```  
+  
+也就是说，它是“Docker 引擎零件仓库”，不是“容器镜像码头”。  
+  
+如果要拉 `vaultwarden/server` 这种镜像，需要的是 Docker Hub 镜像加速或其他镜像分发方案。  
+  
+临时可用的一种方式是使用镜像前缀：  
+  
+```bash  
+docker pull <mirror-prefix>/docker.io/vaultwarden/server:latest  
+docker tag <mirror-prefix>/docker.io/vaultwarden/server:latest vaultwarden/server:latest  
+```  
+  
+更稳的方式是在另一台网络条件更好的机器上操作：  
+  
+```bash  
+docker pull vaultwarden/server:latest  
+docker save vaultwarden/server:latest -o vaultwarden-server-latest.tar  
+```  
+  
+然后传到服务器上：  
+  
+```bash  
+docker load -i vaultwarden-server-latest.tar  
+```  
+  
+这样供应链更清楚，中间环节也更少。  
+  
+---  
+  
+## 九、第七个坑：Microsoft Store 版 Bitwarden 不支持浏览器集成  
+  
+Vaultwarden 更新完成后，Bitwarden 桌面客户端终于可以登录了。  
+  
+但我打开桌面端里的：  
+  
+```text  
+浏览器集成 / Browser integration  
+```  
+  
+却提示：  
+  
+```text  
+Windows Store 版本不允许这个选项  
+```  
+  
+这不是配置问题，而是版本限制。  
+  
+Windows 上如果要让 Bitwarden 桌面客户端和浏览器扩展配合使用 Windows Hello，需要安装 Bitwarden 官网下载的桌面版，而不是 Microsoft Store 版。  
+  
+正确做法是：  
+  
+```text  
+卸载 Microsoft Store 版 Bitwarden  
+去 Bitwarden 官网下载 Windows 桌面安装包  
+安装官网版 Bitwarden  
+登录自建 Vaultwarden  
+开启浏览器集成  
+```  
+  
+这里很反直觉，因为很多软件的商店版和官网版差别不大。  
+但 Bitwarden 在 Windows 上，这个差别刚好踩在关键功能上。  
+  
+所以最后要用：  
+  
+```text  
+Windows 官网版 Bitwarden 桌面客户端  
++  
+Bitwarden 浏览器扩展  
+```  
+  
+不要用 Microsoft Store 版来做浏览器集成。  
+  
+---  
+  
+## 十、最终跑通的配置  
+  
+最终成功的结构如下：  
+  
+```text  
+自建 Vaultwarden：已更新到兼容新版客户端的版本  
+Bitwarden Desktop：Windows 官网版  
+Bitwarden Browser Extension：浏览器扩展  
+Windows Hello：系统认证  
+```  
+  
+桌面客户端里开启：  
+  
+```text  
+Unlock with Windows Hello  
+Allow browser integration  
+```  
+  
+浏览器扩展里开启：  
+  
+```text  
+Unlock with biometrics  
+Ask for biometrics on launch  
+```  
+  
+其中 `Ask for biometrics on launch` 的效果是：  
+打开浏览器扩展时，直接请求 Windows Hello 解锁，而不是先显示解锁页面再手动点一次。  
+  
+还有一个选项需要注意：  
+  
+```text  
+Require verification for browser integration  
+```  
+  
+如果开启，它可能会让浏览器扩展和桌面客户端联动时多一次确认。  
+如果想减少操作步骤，可以关闭它。  
+  
+最终体验是：  
+  
+```text  
+打开浏览器扩展  
+弹出 Windows Hello  
+完成系统认证  
+Bitwarden 解锁  
+```  
+  
+这已经基本达到目标：不用每次输入主密码，但保险库仍然会锁定。  
+  
+---  
+  
+## 十一、为什么 Windows Hello 之后还要点一下确认？  
+  
+跑通后还有一个小遗憾：  
+  
+Windows Hello 弹窗出现后，仍然可能需要手动点一下确认。  
+  
+这个大概率不是 Bitwarden 的限制，而是 Windows Hello 的系统级交互。Bitwarden 只是调用 Windows Hello，真正的认证弹窗由 Windows 控制。  
+  
+所以可以优化的是：  
+  
+```text  
+打开扩展后自动弹 Windows Hello  
+减少 Bitwarden 自己的额外确认  
+```  
+  
+但 Windows Hello 弹窗里的系统确认，不一定能完全跳过。  
+  
+这点像门卫已经认出你了，但还要你点头说一句“是我”。略烦，但还能接受。  
+  
+---  
+  
+## 十二、安全取舍  
+  
+这套方案不是把密码库放开，也不是降低主密码的重要性。  
+  
+它只是把日常解锁流程从：  
+  
+```text  
+每次输入 Bitwarden 主密码  
+```  
+  
+变成：  
+  
+```text  
+保险库锁定  
+通过本机 Windows Hello 解锁  
+```  
+  
+安全边界变成：  
+  
+```text  
+Windows 账户本身是否安全  
+本机是否可信  
+Bitwarden 是否及时锁定  
+离开电脑时是否锁屏  
+```  
+  
+推荐配置：  
+  
+```text  
+Vault timeout：5 到 15 分钟  
+Timeout action：Lock，不要 Log out  
+不要设置 Never lock  
+离开电脑及时锁屏  
+```  
+  
+需要明确的是：  
+  
+```text  
+如果电脑已经中毒，密码管理器无法解决所有问题  
+如果别人能解锁你的 Windows，也可能解锁你的 Bitwarden  
+如果保险库长期不锁，风险会明显上升  
+```  
+  
+所以这套方案的核心不是“偷懒”，而是把安全和体验重新平衡：  
+  
+```text  
+主密码仍然是最高级钥匙  
+Windows Hello 只是本机解锁方式  
+浏览器扩展继续负责自动填充  
+保险库仍然按超时时间锁定  
+```  
+  
+---  
+  
+## 总结  
+  
+这次折腾看似只是想解决一个小问题：  
+  
+> 浏览器端 Bitwarden 不想每次输入主密码。  
+  
+但中间实际踩了不少坑：  
+  
+```text  
+1. 浏览器扩展不能单独完成 Windows Hello 解锁  
+2. 需要 Bitwarden 桌面客户端配合  
+3. 桌面客户端不是浏览器扩展的替代品  
+4. 普通高清摄像头不等于 Windows Hello 摄像头  
+5. Windows Hello 摄像头可能需要额外排查驱动和连接  
+6. 自建 Vaultwarden 版本太旧会导致新版客户端登录失败  
+7. docker pull 使用的是 Docker daemon 网络环境，不是当前 shell  
+8. Docker daemon 代理失效会导致镜像拉取失败  
+9. 取消代理后，Docker Hub 直连可能仍然超时  
+10. 清华 Docker CE 源不是 Docker Hub 镜像仓库  
+11. Microsoft Store 版 Bitwarden 不支持浏览器集成  
+12. Windows Hello 的系统确认按钮不一定能完全跳过  
+```  
+  
+最终可用方案是：  
+  
+```text  
+更新 Vaultwarden  
+安装 Bitwarden 官网版 Windows 桌面客户端  
+保留 Bitwarden 浏览器扩展  
+桌面端开启 Windows Hello 和浏览器集成  
+浏览器扩展开启 Windows Hello 解锁  
+设置合理的 Vault timeout  
+Timeout action 使用 Lock  
+```  
+  
+最终效果：  
+  
+```text  
+保险库不会长期敞开  
+日常解锁不用反复输入主密码  
+浏览器自动填充体验保留  
+自建 Vaultwarden 继续可用  
+```  
+  
+这大概就是我想要的状态：  
+保险柜还锁着，但不再要求我每天背十几遍开门咒语。  
