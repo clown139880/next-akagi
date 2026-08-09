@@ -25,7 +25,7 @@ export default function Home({ posts }) {
             {siteMetadata.description}
           </p>
         </div>
-        <ul className="space-y-2">
+        <ul>
           {!posts.length && 'No posts found.'}
           {displayPosts.map((post, index) => {
             const { postId, slug, date, title, summary, tags, images } = post
@@ -91,10 +91,10 @@ export default function Home({ posts }) {
                           </div>
                         </div>
                         <div
-                          className={`prose max-w-none whitespace-break-spaces dark:text-gray-300 ${
+                          className={`prose whitespace-break-spaces dark:text-gray-300 ${
                             isShortPost
-                              ? 'text-[1.05rem] leading-8 text-gray-700'
-                              : 'text-gray-500 dark:text-gray-400'
+                              ? 'max-w-[68ch] text-[1.0625rem] leading-[1.95] tracking-[0.006em] text-gray-700 [line-break:strict] [text-wrap:pretty]'
+                              : 'max-w-none text-gray-500 dark:text-gray-400'
                           }`}
                         >
                           {summary}

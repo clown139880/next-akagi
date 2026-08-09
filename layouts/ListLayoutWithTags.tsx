@@ -163,7 +163,7 @@ export default function ListLayoutWithTags({
             </div>
           </div>
           <div>
-            <ul className="space-y-2">
+            <ul>
               {posts.map((post, index) => {
                 const { path, date, title, summary, tags, images } = post
                 const isShortPost = !title
@@ -220,7 +220,13 @@ export default function ListLayoutWithTags({
                             ))}
                           </div>
                         </div>
-                        <div className="prose max-w-none whitespace-break-spaces text-gray-500 dark:text-gray-400">
+                        <div
+                          className={`prose whitespace-break-spaces [line-break:strict] [text-wrap:pretty] ${
+                            isShortPost
+                              ? 'max-w-[68ch] text-[1.0625rem] leading-[1.95] tracking-[0.006em] text-gray-700 dark:text-gray-300'
+                              : 'max-w-none text-gray-500 dark:text-gray-400'
+                          }`}
+                        >
                           {summary}
                         </div>
                         {images?.[0] && (
