@@ -21,7 +21,7 @@ const longPosts = allBlogs
       !post.tags?.includes('歌词收录')
   )
   .map((post) => ({ post, length: post.contentChars }))
-  .filter(({ length }) => length >= 700)
+  .filter(({ length }) => length >= 500)
 
 const recentPosts = [...longPosts]
   .filter(({ post }) => new Date(post.date).getFullYear() >= 2021)

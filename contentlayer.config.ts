@@ -111,7 +111,7 @@ function createTagCount(allBlogs) {
   allBlogs.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
       const contentChars = file.contentChars
-      const isLongPost = Boolean(file.title) && contentChars >= 700
+      const isLongPost = Boolean(file.title) && contentChars >= 500
       file.tags.forEach((tag) => {
         const formattedTag = slug(tag)
         if (formattedTag in tagCount) {
