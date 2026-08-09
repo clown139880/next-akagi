@@ -166,7 +166,7 @@ export default function ListLayoutWithTags({
             <ul>
               {posts.map((post, index) => {
                 const { path, date, title, summary, tags, images } = post
-                const isShortPost = !title
+                const isShortPost = !title && tags?.includes('闲谈')
                 const followsShortPost = isShortPost && index > 0 && !posts[index - 1].title
                 const precedesShortPost =
                   isShortPost && index < posts.length - 1 && !posts[index + 1].title

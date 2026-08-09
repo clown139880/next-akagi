@@ -29,7 +29,7 @@ export default function Home({ posts }) {
           {!posts.length && 'No posts found.'}
           {displayPosts.map((post, index) => {
             const { postId, slug, date, title, summary, tags, images } = post
-            const isShortPost = !title
+            const isShortPost = !title && tags?.includes('闲谈')
             const followsShortPost = isShortPost && index > 0 && !displayPosts[index - 1].title
             const precedesShortPost =
               isShortPost && index < displayPosts.length - 1 && !displayPosts[index + 1].title
