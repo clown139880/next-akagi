@@ -16,15 +16,13 @@ type TagStats = {
 }
 
 const featuredTagNames = [
-  '异度之刃2',
+  '小市民',
+  '败犬女主太多了',
   '命运石之门',
+  '异度之刃2',
   '不知所措才是人生',
   '舞动青春',
   '3月的狮子',
-  '吹响吧上低音号',
-  '最终幻想15',
-  'flip-flappers',
-  '紫罗兰永恒花园',
 ]
 
 export default async function Page() {
@@ -61,10 +59,10 @@ export default async function Page() {
               id="collections-heading"
               className="text-2xl font-bold text-gray-900 dark:text-gray-100"
             >
-              长篇与系列
+              专题与系列
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              值得从第一篇慢慢读下去的内容
+              近期仍在生长，也值得从第一篇慢慢读下去
             </p>
           </div>
           <span className="hidden text-sm text-gray-400 sm:block">
@@ -87,7 +85,7 @@ export default async function Page() {
                   {tag}
                 </span>
                 <span className="whitespace-nowrap text-xs text-gray-400">
-                  {stats.longPosts} 篇文章 / {stats.count} 篇内容
+                  {stats.count} 篇 · {stats.totalChars.toLocaleString('zh-CN')} 字
                 </span>
               </Link>
             )
