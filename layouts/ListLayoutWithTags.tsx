@@ -21,13 +21,13 @@ interface ListLayoutProps {
   title: string
   initialDisplayPosts?: CoreContent<Blog>[]
   pagination?: PaginationProps
+  paginationBasePath?: string
 }
 
-function Pagination({ totalPages, currentPage }: PaginationProps) {
-  const pathname = usePathname()
-  const basePath = pathname.split('/')[1]
+function Pagination({ totalPages, currentPage, basePath }: PaginationProps & { basePath: string }) {
   const prevPage = currentPage - 1 > 0
   const nextPage = currentPage + 1 <= totalPages
+  const pageHref = (page: number) => (page === 1 ? basePath : `${basePath}/page/${page}`)
 
   return (
     <div className="space-y-2 pb-8 pt-6 md:space-y-5">
@@ -38,15 +38,12 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           </button>
         )}
         {prevPage && (
-          <Link
-            href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
-            rel="prev"
-          >
-            Previous
+          <Link href={pageHref(currentPage - 1)} rel="prev">
+            上一页
           </Link>
         )}
         <span>
-          {currentPage} of {totalPages}
+          {currentPage} / {totalPages}
         </span>
         {!nextPage && (
           <button className="cursor-auto disabled:opacity-50" disabled={!nextPage}>
@@ -54,8 +51,8 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           </button>
         )}
         {nextPage && (
-          <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
-            Next
+          <Link href={pageHref(currentPage + 1)} rel="next">
+            下一页
           </Link>
         )}
       </nav>
@@ -68,6 +65,7 @@ export default function ListLayoutWithTags({
   title,
   initialDisplayPosts = [],
   pagination,
+  paginationBasePath = '/blog',
 }: ListLayoutProps) {
   const pathname = usePathname()
   const tagCounts = tagData as Record<string, { count: number; lastmod: string }>
@@ -126,13 +124,32 @@ export default function ListLayoutWithTags({
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
               {displayPosts.map((post) => {
                 const { path, date, title, summary, tags, images } = post
+                const isShortPost = !title
                 return (
                   <li key={path} className="py-5">
-                    <article className="flex flex-col space-y-2 xl:space-y-0">
+                    <article
+                      className={`flex flex-col space-y-3 rounded-2xl px-4 py-5 sm:px-6 ${
+                        isShortPost
+                          ? 'bg-gray-50/80 ring-1 ring-gray-200/70 dark:bg-gray-900/40 dark:ring-gray-800'
+                          : ''
+                      }`}
+                    >
                       <dl>
                         <dt className="sr-only">Published on</dt>
                         <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-                          <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                          <Link
+                            href={`/${path}`}
+                            aria-label={`查看 ${formatDate(date, siteMetadata.locale)} 发布的内容`}
+                            className="inline-flex items-center gap-2 hover:text-primary-500"
+                          >
+                            {isShortPost && (
+                              <span
+                                className="h-2 w-2 rounded-full bg-primary-500"
+                                aria-hidden="true"
+                              />
+                            )}
+                            <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                          </Link>
                         </dd>
                       </dl>
                       <div className="space-y-3">
@@ -163,24 +180,17 @@ export default function ListLayoutWithTags({
                           />
                         )}
                       </div>
-                      {!title && (
-                        <div className="text-base font-medium leading-6">
-                          <Link
-                            href={`/${path}`}
-                            className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-                            aria-label={`Read more: "${title}"`}
-                          >
-                            Read more &rarr;
-                          </Link>
-                        </div>
-                      )}
                     </article>
                   </li>
                 )
               })}
             </ul>
             {pagination && pagination.totalPages > 1 && (
-              <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                basePath={paginationBasePath}
+              />
             )}
           </div>
         </div>

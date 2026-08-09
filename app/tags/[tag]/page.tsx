@@ -7,6 +7,8 @@ import tagData from 'app/tag-data.json'
 import { genPageMetadata } from 'app/seo'
 import { Metadata } from 'next'
 
+const POSTS_PER_PAGE = 15
+
 export async function generateMetadata(props: {
   params: Promise<{ tag: string }>
 }): Promise<Metadata> {
@@ -37,7 +39,6 @@ export default async function TagPage(props: { params: Promise<{ tag: string }> 
   const params = await props.params
   const tag = decodeURI(decodeURI(params.tag))
 
-  console.log(tag, params.tag)
   // Capitalize first letter and convert space to dash
   const title = tag[0].toUpperCase() + tag.split(' ').join('-').slice(1)
   const filteredPosts = allCoreContent(
@@ -51,5 +52,19 @@ export default async function TagPage(props: { params: Promise<{ tag: string }> 
       )
     )
   )
-  return <ListLayout posts={filteredPosts} title={title} />
+  const initialDisplayPosts = filteredPosts.slice(0, POSTS_PER_PAGE)
+  const pagination = {
+    currentPage: 1,
+    totalPages: Math.ceil(filteredPosts.length / POSTS_PER_PAGE),
+  }
+
+  return (
+    <ListLayout
+      posts={filteredPosts}
+      initialDisplayPosts={initialDisplayPosts}
+      pagination={pagination}
+      paginationBasePath={`/tags/${params.tag}`}
+      title={title}
+    />
+  )
 }

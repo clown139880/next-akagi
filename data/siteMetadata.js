@@ -3,8 +3,8 @@ const siteMetadata = {
   title: 'Next Akagi',
   author: 'UniClown',
   headerTitle: 'NextAkagi',
-  description: 'Akagi created with Next.js and Tailwind.css',
-  language: 'en-us',
+  description: 'UniClown 的个人博客，记录技术折腾、游戏与日常生活。',
+  language: 'zh-CN',
   theme: 'system', // system, dark or light
   siteUrl: 'https://uniclown.com',
   siteRepo: 'https://github.com/clown139880/next-akagi',
@@ -20,7 +20,7 @@ const siteMetadata = {
   // linkedin: 'https://www.linkedin.com',
   // threads: 'https://www.threads.net',
   // instagram: 'https://www.instagram.com',
-  locale: 'en-US',
+  locale: 'zh-CN',
   analytics: {
     // If you want to use an analytics provider you have to add it to the
     // content security policy in the `next.config.js` file.
