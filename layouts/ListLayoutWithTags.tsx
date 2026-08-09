@@ -2,6 +2,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
@@ -103,6 +104,16 @@ export default function ListLayoutWithTags({
   >
   const currentTagSegment = pathname.split('/tags/')[1]?.split('/')[0]
   const currentTag = currentTagSegment ? decodeURIComponent(currentTagSegment) : undefined
+  const sidebarTags = [
+    '闲谈',
+    '随笔',
+    '动画',
+    '异度之刃2',
+    '命运石之门',
+    '不知所措才是人生',
+    '舞动青春',
+    '3月的狮子',
+  ].filter((tag) => tagCounts[tag])
   return (
     <>
       <div className="mx-auto max-w-4xl">
@@ -131,95 +142,147 @@ export default function ListLayoutWithTags({
             )}
           </div>
         </header>
-        <div>
-          <ul>
-            {posts.map((post, index) => {
-              const { path, date, title, summary, tags, images } = post
-              const isShortPost = !title && tags?.includes('闲谈')
-              const followsShortPost = isShortPost && index > 0 && !posts[index - 1].title
-              const precedesShortPost =
-                isShortPost && index < posts.length - 1 && !posts[index + 1].title
-              return (
-                <li key={path} className={isShortPost ? 'py-4' : 'py-8'}>
-                  <article
-                    className={`relative flex flex-col space-y-3 ${
-                      isShortPost
-                        ? 'py-2 pl-6 sm:pl-8'
-                        : 'border-t border-gray-200 pt-8 dark:border-gray-800'
+        <div className="xl:grid xl:grid-cols-[11rem_minmax(0,1fr)] xl:gap-14">
+          <aside className="hidden xl:block">
+            <nav
+              className="sticky top-24 border-t border-gray-200 pt-5 dark:border-gray-800"
+              aria-label="内容分类"
+            >
+              <p className="mb-4 text-[0.6875rem] font-semibold tracking-[0.16em] text-gray-400">
+                EXPLORE
+              </p>
+              <ul className="space-y-1">
+                <li>
+                  <Link
+                    href="/blog"
+                    className={`block py-2 text-sm transition-colors ${
+                      !currentTag
+                        ? 'font-semibold text-primary-500'
+                        : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
                     }`}
                   >
-                    {isShortPost && (
-                      <>
-                        <span
-                          className={`absolute left-0 w-px bg-primary-500/25 ${
-                            followsShortPost ? '-top-4' : 'top-4'
-                          } ${precedesShortPost ? '-bottom-4' : 'bottom-0'}`}
-                          aria-hidden="true"
-                        />
-                        <span
-                          className="absolute -left-[4px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
-                          aria-hidden="true"
-                        />
-                      </>
-                    )}
-                    <dl>
-                      <dt className="sr-only">Published on</dt>
-                      <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-                        <Link
-                          href={`/${path}`}
-                          aria-label={`查看 ${formatDate(date, siteMetadata.locale)} 发布的内容`}
-                          className="inline-flex items-center gap-2 hover:text-primary-500"
-                        >
-                          <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
-                        </Link>
-                      </dd>
-                    </dl>
-                    <div className="space-y-3">
-                      <div>
-                        {title && (
-                          <h2 className="text-2xl font-bold leading-8 tracking-tight">
-                            <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
-                              {title}
-                            </Link>
-                          </h2>
-                        )}
-                        <div className="flex flex-wrap">
-                          {tags?.map((tag) => (
-                            <Tag key={tag} text={tag} />
-                          ))}
-                        </div>
-                      </div>
-                      <div
-                        className={`prose whitespace-break-spaces [line-break:strict] [text-wrap:pretty] ${
-                          isShortPost
-                            ? 'max-w-[68ch] text-[1.0625rem] leading-[1.95] tracking-[0.006em] text-gray-700 dark:text-gray-300'
-                            : 'max-w-none text-gray-500 dark:text-gray-400'
+                    全部内容
+                  </Link>
+                </li>
+                {sidebarTags.map((tag) => {
+                  const active = currentTag === slug(tag)
+                  return (
+                    <li key={tag}>
+                      <Link
+                        href={`/tags/${slug(tag)}`}
+                        className={`group flex items-baseline justify-between gap-2 py-2 text-sm transition-colors ${
+                          active
+                            ? 'font-semibold text-primary-500'
+                            : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
                         }`}
                       >
-                        {summary}
-                      </div>
-                      {images?.[0] && (
-                        <Image
-                          src={images?.[0]}
-                          alt={`Cover Image for ${title}`}
-                          width={800}
-                          height={400}
-                          className="rounded-lg"
-                        />
+                        <span>{tag}</span>
+                        <span className="text-xs text-gray-300 group-hover:text-gray-400 dark:text-gray-700">
+                          {tagCounts[tag].count}
+                        </span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+              <Link
+                href="/tags"
+                className="mt-5 block border-t border-gray-200 pt-5 text-sm text-gray-500 transition-colors hover:text-primary-500 dark:border-gray-800 dark:text-gray-400"
+              >
+                标签与专题 →
+              </Link>
+            </nav>
+          </aside>
+          <div className="min-w-0">
+            <ul>
+              {posts.map((post, index) => {
+                const { path, date, title, summary, tags, images } = post
+                const isShortPost = !title && tags?.includes('闲谈')
+                const followsShortPost = isShortPost && index > 0 && !posts[index - 1].title
+                const precedesShortPost =
+                  isShortPost && index < posts.length - 1 && !posts[index + 1].title
+                return (
+                  <li key={path} className={isShortPost ? 'py-4' : 'py-8'}>
+                    <article
+                      className={`relative flex flex-col space-y-3 ${
+                        isShortPost
+                          ? 'py-2 pl-6 sm:pl-8'
+                          : 'border-t border-gray-200 pt-8 dark:border-gray-800'
+                      }`}
+                    >
+                      {isShortPost && (
+                        <>
+                          <span
+                            className={`absolute left-0 w-px bg-primary-500/25 ${
+                              followsShortPost ? '-top-4' : 'top-4'
+                            } ${precedesShortPost ? '-bottom-4' : 'bottom-0'}`}
+                            aria-hidden="true"
+                          />
+                          <span
+                            className="absolute -left-[4px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
+                            aria-hidden="true"
+                          />
+                        </>
                       )}
-                    </div>
-                  </article>
-                </li>
-              )
-            })}
-          </ul>
-          {pagination && pagination.totalPages > 1 && (
-            <Pagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              basePath={paginationBasePath}
-            />
-          )}
+                      <dl>
+                        <dt className="sr-only">Published on</dt>
+                        <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
+                          <Link
+                            href={`/${path}`}
+                            aria-label={`查看 ${formatDate(date, siteMetadata.locale)} 发布的内容`}
+                            className="inline-flex items-center gap-2 hover:text-primary-500"
+                          >
+                            <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                          </Link>
+                        </dd>
+                      </dl>
+                      <div className="space-y-3">
+                        <div>
+                          {title && (
+                            <h2 className="text-2xl font-bold leading-8 tracking-tight">
+                              <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
+                                {title}
+                              </Link>
+                            </h2>
+                          )}
+                          <div className="flex flex-wrap">
+                            {tags?.map((tag) => (
+                              <Tag key={tag} text={tag} />
+                            ))}
+                          </div>
+                        </div>
+                        <div
+                          className={`prose whitespace-break-spaces [line-break:strict] [text-wrap:pretty] ${
+                            isShortPost
+                              ? 'max-w-[68ch] text-[1.0625rem] leading-[1.95] tracking-[0.006em] text-gray-700 dark:text-gray-300'
+                              : 'max-w-none text-gray-500 dark:text-gray-400'
+                          }`}
+                        >
+                          {summary}
+                        </div>
+                        {images?.[0] && (
+                          <Image
+                            src={images?.[0]}
+                            alt={`Cover Image for ${title}`}
+                            width={800}
+                            height={400}
+                            className="rounded-lg"
+                          />
+                        )}
+                      </div>
+                    </article>
+                  </li>
+                )
+              })}
+            </ul>
+            {pagination && pagination.totalPages > 1 && (
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                basePath={paginationBasePath}
+              />
+            )}
+          </div>
         </div>
       </div>
     </>
