@@ -17,7 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: post.lastmod || post.date,
   }))
 
-  const mainRoutes = ['', 'blog', 'projects', 'tags'].map((route) => ({
+  const mainRoutes = ['', 'blog', 'essays', 'projects', 'tags'].map((route) => ({
     url: `${siteUrl}/${route}`,
     lastModified: latestPostDate,
   }))

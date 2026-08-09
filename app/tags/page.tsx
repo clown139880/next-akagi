@@ -37,6 +37,10 @@ export default async function Page() {
       tagCounts[b].totalChars - tagCounts[a].totalChars ||
       a.localeCompare(b, 'zh-CN')
   )
+  const popularTags = allTags.slice(0, 8)
+  const recentTags = [...tagKeys]
+    .sort((a, b) => tagCounts[b].lastmod.localeCompare(tagCounts[a].lastmod))
+    .slice(0, 8)
 
   return (
     <div className="mx-auto max-w-5xl pb-16 pt-10 md:pt-24">
@@ -89,6 +93,38 @@ export default async function Page() {
             )
           })}
         </div>
+      </section>
+
+      <section className="mt-16 grid gap-12 md:grid-cols-2" aria-label="标签榜单">
+        {[
+          { title: '文章最多', description: '长期反复写到的主题', tags: popularTags },
+          { title: '最近更新', description: '近期仍在生长的话题', tags: recentTags },
+        ].map((group) => (
+          <div key={group.title}>
+            <div className="mb-3 border-b border-gray-200 pb-4 dark:border-gray-800">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{group.title}</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{group.description}</p>
+            </div>
+            <ol>
+              {group.tags.map((tag, index) => (
+                <li key={tag}>
+                  <Link
+                    href={`/tags/${slug(tag)}`}
+                    className="group grid grid-cols-[2rem_1fr_auto] items-baseline gap-2 border-b border-gray-100 py-3 text-sm dark:border-gray-900"
+                  >
+                    <span className="font-mono text-xs text-gray-300 dark:text-gray-700">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-gray-700 transition-colors group-hover:text-primary-500 dark:text-gray-300">
+                      {tag}
+                    </span>
+                    <span className="text-xs text-gray-400">{tagCounts[tag].count} 篇</span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
       </section>
 
       <section className="mt-16" aria-labelledby="all-tags-heading">
