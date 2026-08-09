@@ -42,6 +42,31 @@ const icon = fromHtmlIsomorphic(
 
 const computedFields: ComputedFields = {
   readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+  legacyLineBreaks: {
+    type: 'boolean',
+    resolve: (doc) => {
+      if (new Date(doc.date).getFullYear() >= 2021) return false
+
+      let consecutiveProseLines = 0
+      let longestProseRun = 0
+      for (const rawLine of doc.body.raw.split('\n')) {
+        const line = rawLine.trim()
+        const isPlainProse =
+          line.length > 0 &&
+          line.length <= 120 &&
+          !/^(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|```|~~~|!\[|\[.*\]:|<[^>]+>)/.test(line)
+
+        if (isPlainProse) {
+          consecutiveProseLines += 1
+          longestProseRun = Math.max(longestProseRun, consecutiveProseLines)
+        } else {
+          consecutiveProseLines = 0
+        }
+      }
+
+      return longestProseRun >= 6
+    },
+  },
   slug: {
     type: 'string',
     resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
