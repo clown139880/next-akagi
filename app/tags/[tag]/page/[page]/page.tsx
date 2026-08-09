@@ -30,8 +30,9 @@ export async function generateMetadata(props: {
   const { tag: encodedTag, page } = await props.params
   const tag = decodeURI(decodeURI(encodedTag))
   return genPageMetadata({
-    title: `${tag} - 第 ${page} 页`,
-    description: `${siteMetadata.title} 中与 ${tag} 相关的内容，第 ${page} 页`,
+    title: `${tag} 标签 - 第 ${page} 页`,
+    description: `${siteMetadata.title} 中与 ${tag} 相关的文章与闲谈，第 ${page} 页。`,
+    alternates: { canonical: `/tags/${encodedTag}/page/${page}` },
   })
 }
 
@@ -66,8 +67,7 @@ export default async function TagPage(props: { params: Promise<{ tag: string; pa
 
   return (
     <ListLayout
-      posts={posts}
-      initialDisplayPosts={initialDisplayPosts}
+      posts={initialDisplayPosts}
       pagination={{ currentPage: pageNumber, totalPages }}
       paginationBasePath={`/tags/${params.tag}`}
       title={title}

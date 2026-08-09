@@ -5,7 +5,11 @@ import { genPageMetadata } from 'app/seo'
 
 const POSTS_PER_PAGE = 15
 
-export const metadata = genPageMetadata({ title: 'Blog' })
+export const metadata = genPageMetadata({
+  title: '全部内容',
+  description: 'UniClown 的全部文章与闲谈。',
+  alternates: { canonical: '/blog' },
+})
 
 export default function BlogPage() {
   const posts = allCoreContent(sortPosts(allBlogs))
@@ -21,8 +25,7 @@ export default function BlogPage() {
 
   return (
     <ListLayout
-      posts={posts}
-      initialDisplayPosts={initialDisplayPosts}
+      posts={initialDisplayPosts}
       pagination={pagination}
       paginationBasePath="/blog"
       title="All Posts"

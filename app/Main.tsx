@@ -23,20 +23,26 @@ export default function Home({ posts }) {
             {siteMetadata.description}
           </p>
         </div>
-        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        <ul className="space-y-2">
           {!posts.length && 'No posts found.'}
           {posts.slice(0, MAX_DISPLAY).map((post) => {
             const { postId, slug, date, title, summary, tags, images } = post
             const isShortPost = !title
             return (
-              <li key={postId + slug} className="py-7 sm:py-10">
+              <li key={postId + slug} className={isShortPost ? 'py-5' : 'py-10 sm:py-14'}>
                 <article
-                  className={`rounded-2xl transition-colors ${
+                  className={`relative transition-colors ${
                     isShortPost
-                      ? 'bg-gray-50/80 px-5 py-6 ring-1 ring-gray-200/70 dark:bg-gray-900/40 dark:ring-gray-800 sm:px-7'
-                      : ''
+                      ? 'border-l border-primary-500/25 py-2 pl-6 sm:pl-8'
+                      : 'border-t border-gray-200 pt-10 dark:border-gray-800'
                   }`}
                 >
+                  {isShortPost && (
+                    <span
+                      className="absolute -left-[5px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
+                      aria-hidden="true"
+                    />
+                  )}
                   <div className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
                     <dl>
                       <dt className="sr-only">Published on</dt>
@@ -46,12 +52,6 @@ export default function Home({ posts }) {
                           aria-label={`查看 ${formatDate(date, siteMetadata.locale)} 发布的内容`}
                           className="inline-flex items-center gap-2 hover:text-primary-500"
                         >
-                          {isShortPost && (
-                            <span
-                              className="h-2 w-2 rounded-full bg-primary-500"
-                              aria-hidden="true"
-                            />
-                          )}
                           <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
                         </Link>
                       </dd>

@@ -15,13 +15,10 @@ export async function generateMetadata(props: {
   const params = await props.params
   const tag = decodeURI(decodeURI(params.tag))
   return genPageMetadata({
-    title: tag,
-    description: `${siteMetadata.title} ${tag} tagged content`,
+    title: `${tag} 标签`,
+    description: `${siteMetadata.title} 中与 ${tag} 相关的文章与闲谈。`,
     alternates: {
-      canonical: './',
-      types: {
-        'application/rss+xml': `${siteMetadata.siteUrl}/tags/${tag}/feed.xml`,
-      },
+      canonical: `/tags/${params.tag}`,
     },
   })
 }
@@ -39,7 +36,6 @@ export default async function TagPage(props: { params: Promise<{ tag: string }> 
   const params = await props.params
   const tag = decodeURI(decodeURI(params.tag))
 
-  // Capitalize first letter and convert space to dash
   const title = tag[0].toUpperCase() + tag.split(' ').join('-').slice(1)
   const filteredPosts = allCoreContent(
     sortPosts(
@@ -60,8 +56,7 @@ export default async function TagPage(props: { params: Promise<{ tag: string }> 
 
   return (
     <ListLayout
-      posts={filteredPosts}
-      initialDisplayPosts={initialDisplayPosts}
+      posts={initialDisplayPosts}
       pagination={pagination}
       paginationBasePath={`/tags/${params.tag}`}
       title={title}

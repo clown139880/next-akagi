@@ -19,42 +19,73 @@ interface PaginationProps {
 interface ListLayoutProps {
   posts: CoreContent<Blog>[]
   title: string
-  initialDisplayPosts?: CoreContent<Blog>[]
   pagination?: PaginationProps
   paginationBasePath?: string
+}
+
+function getPageItems(currentPage: number, totalPages: number) {
+  const pages = new Set([1, totalPages])
+  for (let page = currentPage - 2; page <= currentPage + 2; page += 1) {
+    if (page > 0 && page <= totalPages) pages.add(page)
+  }
+
+  const sortedPages = [...pages].sort((a, b) => a - b)
+  return sortedPages.flatMap<number | 'ellipsis'>((page, index) => {
+    const previousPage = sortedPages[index - 1]
+    return previousPage && page - previousPage > 1 ? ['ellipsis', page] : [page]
+  })
 }
 
 function Pagination({ totalPages, currentPage, basePath }: PaginationProps & { basePath: string }) {
   const prevPage = currentPage - 1 > 0
   const nextPage = currentPage + 1 <= totalPages
   const pageHref = (page: number) => (page === 1 ? basePath : `${basePath}/page/${page}`)
+  const pageItems = getPageItems(currentPage, totalPages)
 
   return (
     <div className="space-y-2 pb-8 pt-6 md:space-y-5">
-      <nav className="flex justify-between">
-        {!prevPage && (
-          <button className="cursor-auto disabled:opacity-50" disabled={!prevPage}>
-            Previous
-          </button>
-        )}
-        {prevPage && (
-          <Link href={pageHref(currentPage - 1)} rel="prev">
-            上一页
-          </Link>
-        )}
-        <span>
-          {currentPage} / {totalPages}
-        </span>
-        {!nextPage && (
-          <button className="cursor-auto disabled:opacity-50" disabled={!nextPage}>
-            Next
-          </button>
-        )}
-        {nextPage && (
-          <Link href={pageHref(currentPage + 1)} rel="next">
-            下一页
-          </Link>
-        )}
+      <nav aria-label="分页导航" className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-16">
+          {prevPage && (
+            <Link href={pageHref(currentPage - 1)} rel="prev">
+              上一页
+            </Link>
+          )}
+        </div>
+        <ol
+          className="flex items-center gap-1"
+          aria-label={`第 ${currentPage} 页，共 ${totalPages} 页`}
+        >
+          {pageItems.map((item, index) =>
+            item === 'ellipsis' ? (
+              <li key={`ellipsis-${index}`} className="px-2 text-gray-400" aria-hidden="true">
+                …
+              </li>
+            ) : (
+              <li key={item}>
+                <Link
+                  href={pageHref(item)}
+                  aria-current={item === currentPage ? 'page' : undefined}
+                  aria-label={`第 ${item} 页`}
+                  className={`inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 ${
+                    item === currentPage
+                      ? 'bg-primary-500 font-semibold text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-primary-500 dark:text-gray-300 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {item}
+                </Link>
+              </li>
+            )
+          )}
+        </ol>
+        <div className="min-w-16 text-right">
+          {nextPage && (
+            <Link href={pageHref(currentPage + 1)} rel="next">
+              下一页
+            </Link>
+          )}
+        </div>
       </nav>
     </div>
   )
@@ -63,7 +94,6 @@ function Pagination({ totalPages, currentPage, basePath }: PaginationProps & { b
 export default function ListLayoutWithTags({
   posts,
   title,
-  initialDisplayPosts = [],
   pagination,
   paginationBasePath = '/blog',
 }: ListLayoutProps) {
@@ -73,8 +103,6 @@ export default function ListLayoutWithTags({
   const sortedTags = tagKeys.sort((a, b) =>
     tagCounts[b].lastmod.localeCompare(tagCounts[a].lastmod)
   )
-
-  const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
   return (
     <>
@@ -121,19 +149,25 @@ export default function ListLayoutWithTags({
             </div>
           </div>
           <div>
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {displayPosts.map((post) => {
+            <ul className="space-y-2">
+              {posts.map((post) => {
                 const { path, date, title, summary, tags, images } = post
                 const isShortPost = !title
                 return (
-                  <li key={path} className="py-5">
+                  <li key={path} className={isShortPost ? 'py-4' : 'py-8'}>
                     <article
-                      className={`flex flex-col space-y-3 rounded-2xl px-4 py-5 sm:px-6 ${
+                      className={`relative flex flex-col space-y-3 ${
                         isShortPost
-                          ? 'bg-gray-50/80 ring-1 ring-gray-200/70 dark:bg-gray-900/40 dark:ring-gray-800'
-                          : ''
+                          ? 'border-l border-primary-500/25 py-2 pl-6 sm:pl-8'
+                          : 'border-t border-gray-200 pt-8 dark:border-gray-800'
                       }`}
                     >
+                      {isShortPost && (
+                        <span
+                          className="absolute -left-[5px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
+                          aria-hidden="true"
+                        />
+                      )}
                       <dl>
                         <dt className="sr-only">Published on</dt>
                         <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
@@ -142,12 +176,6 @@ export default function ListLayoutWithTags({
                             aria-label={`查看 ${formatDate(date, siteMetadata.locale)} 发布的内容`}
                             className="inline-flex items-center gap-2 hover:text-primary-500"
                           >
-                            {isShortPost && (
-                              <span
-                                className="h-2 w-2 rounded-full bg-primary-500"
-                                aria-hidden="true"
-                              />
-                            )}
                             <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
                           </Link>
                         </dd>
