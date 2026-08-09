@@ -98,10 +98,14 @@ export default function ListLayoutWithTags({
   paginationBasePath = '/blog',
 }: ListLayoutProps) {
   const pathname = usePathname()
-  const tagCounts = tagData as Record<string, { count: number; lastmod: string }>
+  const tagCounts = tagData as Record<
+    string,
+    { count: number; lastmod: string; totalChars: number }
+  >
   const tagKeys = Object.keys(tagCounts)
-  const sortedTags = tagKeys.sort((a, b) =>
-    tagCounts[b].lastmod.localeCompare(tagCounts[a].lastmod)
+  const sortedTags = tagKeys.sort(
+    (a, b) =>
+      tagCounts[b].count - tagCounts[a].count || tagCounts[b].totalChars - tagCounts[a].totalChars
   )
   const currentTagSegment = pathname.split('/tags/')[1]?.split('/')[0]
   const currentTag = currentTagSegment ? decodeURIComponent(currentTagSegment) : undefined

@@ -67,13 +67,20 @@ const computedFields: ComputedFields = {
  * Count the occurrences of all tags across blog posts and write to json file
  */
 function createTagCount(allBlogs) {
-  const tagCount: Record<string, { count: number; lastmod: string }> = {}
+  const tagCount: Record<
+    string,
+    { count: number; lastmod: string; totalChars: number; longPosts: number }
+  > = {}
   allBlogs.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
+      const contentChars = file.body.raw.replace(/\s/g, '').length
+      const isLongPost = Boolean(file.title) && contentChars >= 1200
       file.tags.forEach((tag) => {
         const formattedTag = slug(tag)
         if (formattedTag in tagCount) {
           tagCount[formattedTag].count += 1
+          tagCount[formattedTag].totalChars += contentChars
+          if (isLongPost) tagCount[formattedTag].longPosts += 1
           const lastMod = file.lastmod || file.date
           if (tagCount[formattedTag].lastmod < lastMod) {
             tagCount[formattedTag].lastmod = lastMod
@@ -82,6 +89,8 @@ function createTagCount(allBlogs) {
           tagCount[formattedTag] = {
             count: 1,
             lastmod: file.lastmod || file.date,
+            totalChars: contentChars,
+            longPosts: isLongPost ? 1 : 0,
           }
         }
       })
