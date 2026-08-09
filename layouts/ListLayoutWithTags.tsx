@@ -102,160 +102,165 @@ export default function ListLayoutWithTags({
     string,
     { count: number; lastmod: string; totalChars: number }
   >
-  const tagKeys = Object.keys(tagCounts)
-  const sortedTags = tagKeys.sort(
-    (a, b) =>
-      tagCounts[b].count - tagCounts[a].count || tagCounts[b].totalChars - tagCounts[a].totalChars
-  )
   const currentTagSegment = pathname.split('/tags/')[1]?.split('/')[0]
   const currentTag = currentTagSegment ? decodeURIComponent(currentTagSegment) : undefined
-  const visibleTags = sortedTags.slice(0, 30)
+  const preferredTags = [
+    '闲谈',
+    '动画',
+    '随笔',
+    '异度之刃2',
+    '命运石之门',
+    '不知所措才是人生',
+    '舞动青春',
+    '3月的狮子',
+  ]
+  const visibleTags = preferredTags.filter((tag) => tagCounts[tag])
   if (currentTag && !visibleTags.includes(currentTag) && tagCounts[currentTag]) {
     visibleTags.push(currentTag)
   }
 
   return (
     <>
-      <div>
-        <div className="pb-6 pt-6">
-          <h1 className="text-3xl font-extrabold leading-9 tracking-tight text-gray-900 dark:text-gray-100 sm:hidden sm:text-4xl sm:leading-10 md:text-6xl md:leading-14">
-            {title}
-          </h1>
-        </div>
-        <div className="flex sm:space-x-24">
-          <div className="hidden h-full max-h-screen min-w-[280px] max-w-[280px] flex-wrap overflow-auto rounded bg-gray-50 pt-5 shadow-md dark:bg-gray-900/70 dark:shadow-gray-800/40 sm:flex">
-            <div className="px-6 py-4">
-              {pathname.startsWith('/blog') ? (
-                <h3 className="font-bold uppercase text-primary-500">All Posts</h3>
-              ) : (
-                <Link
-                  href={`/blog`}
-                  className="font-bold uppercase text-gray-700 hover:text-primary-500 dark:text-gray-300 dark:hover:text-primary-500"
-                >
-                  All Posts
-                </Link>
-              )}
-              <ul>
-                {visibleTags.map((t) => {
-                  return (
-                    <li key={t} className="my-3">
-                      {currentTag === slug(t) ? (
-                        <h3 className="inline px-3 py-2 text-sm font-bold uppercase text-primary-500">
-                          {`${t} (${tagCounts[t].count})`}
-                        </h3>
-                      ) : (
-                        <Link
-                          href={`/tags/${slug(t)}`}
-                          className="px-3 py-2 text-sm font-medium uppercase text-gray-500 hover:text-primary-500 dark:text-gray-300 dark:hover:text-primary-500"
-                          aria-label={`View posts tagged ${t}`}
-                        >
-                          {`${t} (${tagCounts[t].count})`}
-                        </Link>
-                      )}
-                    </li>
-                  )
-                })}
-                <li className="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
-                  <Link
-                    href="/tags"
-                    className="px-3 py-2 text-sm font-semibold text-primary-500 hover:text-primary-600"
-                  >
-                    查看全部标签 →
-                  </Link>
-                </li>
-              </ul>
+      <div className="mx-auto max-w-4xl">
+        <div className="border-b border-gray-200 pb-8 pt-10 dark:border-gray-800 md:pt-20">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="mb-3 text-xs font-semibold tracking-[0.18em] text-primary-500">
+                {currentTag ? 'TAGGED WITH' : 'ARCHIVE'}
+              </p>
+              <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-gray-100 md:text-5xl">
+                {title}
+              </h1>
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                {currentTag
+                  ? `${tagCounts[currentTag]?.count ?? posts.length} 篇相关内容`
+                  : '按时间浏览全部内容'}
+              </p>
             </div>
-          </div>
-          <div>
-            <ul>
-              {posts.map((post, index) => {
-                const { path, date, title, summary, tags, images } = post
-                const isShortPost = !title && tags?.includes('闲谈')
-                const followsShortPost = isShortPost && index > 0 && !posts[index - 1].title
-                const precedesShortPost =
-                  isShortPost && index < posts.length - 1 && !posts[index + 1].title
-                return (
-                  <li key={path} className={isShortPost ? 'py-4' : 'py-8'}>
-                    <article
-                      className={`relative flex flex-col space-y-3 ${
-                        isShortPost
-                          ? 'py-2 pl-6 sm:pl-8'
-                          : 'border-t border-gray-200 pt-8 dark:border-gray-800'
-                      }`}
-                    >
-                      {isShortPost && (
-                        <>
-                          <span
-                            className={`absolute left-0 w-px bg-primary-500/25 ${
-                              followsShortPost ? '-top-4' : 'top-4'
-                            } ${precedesShortPost ? '-bottom-4' : 'bottom-0'}`}
-                            aria-hidden="true"
-                          />
-                          <span
-                            className="absolute -left-[4px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
-                            aria-hidden="true"
-                          />
-                        </>
-                      )}
-                      <dl>
-                        <dt className="sr-only">Published on</dt>
-                        <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
-                          <Link
-                            href={`/${path}`}
-                            aria-label={`查看 ${formatDate(date, siteMetadata.locale)} 发布的内容`}
-                            className="inline-flex items-center gap-2 hover:text-primary-500"
-                          >
-                            <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
-                          </Link>
-                        </dd>
-                      </dl>
-                      <div className="space-y-3">
-                        <div>
-                          {title && (
-                            <h2 className="text-2xl font-bold leading-8 tracking-tight">
-                              <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
-                                {title}
-                              </Link>
-                            </h2>
-                          )}
-                          <div className="flex flex-wrap">
-                            {tags?.map((tag) => (
-                              <Tag key={tag} text={tag} />
-                            ))}
-                          </div>
-                        </div>
-                        <div
-                          className={`prose whitespace-break-spaces [line-break:strict] [text-wrap:pretty] ${
-                            isShortPost
-                              ? 'max-w-[68ch] text-[1.0625rem] leading-[1.95] tracking-[0.006em] text-gray-700 dark:text-gray-300'
-                              : 'max-w-none text-gray-500 dark:text-gray-400'
-                          }`}
-                        >
-                          {summary}
-                        </div>
-                        {images?.[0] && (
-                          <Image
-                            src={images?.[0]}
-                            alt={`Cover Image for ${title}`}
-                            width={800}
-                            height={400}
-                            className="rounded-lg"
-                          />
-                        )}
-                      </div>
-                    </article>
-                  </li>
-                )
-              })}
-            </ul>
-            {pagination && pagination.totalPages > 1 && (
-              <Pagination
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                basePath={paginationBasePath}
-              />
+            {currentTag && (
+              <Link
+                href="/tags"
+                className="text-sm font-medium text-primary-500 hover:text-primary-600"
+              >
+                查看所有标签 →
+              </Link>
             )}
           </div>
+          <nav className="mt-8 flex gap-2 overflow-x-auto pb-1" aria-label="常用标签">
+            <Link
+              href="/blog"
+              className={`shrink-0 rounded-full px-4 py-2 text-sm transition-colors ${
+                pathname.startsWith('/blog')
+                  ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                  : 'bg-gray-100 text-gray-600 hover:text-primary-500 dark:bg-gray-900 dark:text-gray-300'
+              }`}
+            >
+              全部
+            </Link>
+            {visibleTags.map((tag) => (
+              <Link
+                key={tag}
+                href={`/tags/${slug(tag)}`}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm transition-colors ${
+                  currentTag === slug(tag)
+                    ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                    : 'bg-gray-100 text-gray-600 hover:text-primary-500 dark:bg-gray-900 dark:text-gray-300'
+                }`}
+              >
+                {tag} <span className="ml-1 opacity-50">{tagCounts[tag].count}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+        <div>
+          <ul>
+            {posts.map((post, index) => {
+              const { path, date, title, summary, tags, images } = post
+              const isShortPost = !title && tags?.includes('闲谈')
+              const followsShortPost = isShortPost && index > 0 && !posts[index - 1].title
+              const precedesShortPost =
+                isShortPost && index < posts.length - 1 && !posts[index + 1].title
+              return (
+                <li key={path} className={isShortPost ? 'py-4' : 'py-8'}>
+                  <article
+                    className={`relative flex flex-col space-y-3 ${
+                      isShortPost
+                        ? 'py-2 pl-6 sm:pl-8'
+                        : 'border-t border-gray-200 pt-8 dark:border-gray-800'
+                    }`}
+                  >
+                    {isShortPost && (
+                      <>
+                        <span
+                          className={`absolute left-0 w-px bg-primary-500/25 ${
+                            followsShortPost ? '-top-4' : 'top-4'
+                          } ${precedesShortPost ? '-bottom-4' : 'bottom-0'}`}
+                          aria-hidden="true"
+                        />
+                        <span
+                          className="absolute -left-[4px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
+                          aria-hidden="true"
+                        />
+                      </>
+                    )}
+                    <dl>
+                      <dt className="sr-only">Published on</dt>
+                      <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
+                        <Link
+                          href={`/${path}`}
+                          aria-label={`查看 ${formatDate(date, siteMetadata.locale)} 发布的内容`}
+                          className="inline-flex items-center gap-2 hover:text-primary-500"
+                        >
+                          <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                        </Link>
+                      </dd>
+                    </dl>
+                    <div className="space-y-3">
+                      <div>
+                        {title && (
+                          <h2 className="text-2xl font-bold leading-8 tracking-tight">
+                            <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
+                              {title}
+                            </Link>
+                          </h2>
+                        )}
+                        <div className="flex flex-wrap">
+                          {tags?.map((tag) => (
+                            <Tag key={tag} text={tag} />
+                          ))}
+                        </div>
+                      </div>
+                      <div
+                        className={`prose whitespace-break-spaces [line-break:strict] [text-wrap:pretty] ${
+                          isShortPost
+                            ? 'max-w-[68ch] text-[1.0625rem] leading-[1.95] tracking-[0.006em] text-gray-700 dark:text-gray-300'
+                            : 'max-w-none text-gray-500 dark:text-gray-400'
+                        }`}
+                      >
+                        {summary}
+                      </div>
+                      {images?.[0] && (
+                        <Image
+                          src={images?.[0]}
+                          alt={`Cover Image for ${title}`}
+                          width={800}
+                          height={400}
+                          className="rounded-lg"
+                        />
+                      )}
+                    </div>
+                  </article>
+                </li>
+              )
+            })}
+          </ul>
+          {pagination && pagination.totalPages > 1 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              basePath={paginationBasePath}
+            />
+          )}
         </div>
       </div>
     </>
