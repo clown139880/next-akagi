@@ -80,6 +80,15 @@ module.exports = () => {
       ],
       unoptimized,
     },
+    async redirects() {
+      return [
+        {
+          source: '/essays/:path*',
+          destination: '/articles/:path*',
+          permanent: true,
+        },
+      ]
+    },
     async headers() {
       return [
         {

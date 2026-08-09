@@ -6,6 +6,7 @@ import siteMetadata from '@/data/siteMetadata'
 import tagData from 'app/tag-data.json'
 
 const POSTS_PER_PAGE = 15
+const ARTICLES_PER_PAGE = 12
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const siteUrl = siteMetadata.siteUrl
@@ -17,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: post.lastmod || post.date,
   }))
 
-  const mainRoutes = ['', 'blog', 'essays', 'projects', 'tags'].map((route) => ({
+  const mainRoutes = ['', 'blog', 'articles', 'projects', 'tags'].map((route) => ({
     url: `${siteUrl}/${route}`,
     lastModified: latestPostDate,
   }))
@@ -30,6 +31,27 @@ export default function sitemap(): MetadataRoute.Sitemap {
       const firstPostOnPage = publishedPosts[(page - 1) * POSTS_PER_PAGE]
       return {
         url: `${siteUrl}/blog/page/${page}`,
+        lastModified: firstPostOnPage?.lastmod || firstPostOnPage?.date || latestPostDate,
+      }
+    }
+  )
+
+  const articlePosts = publishedPosts.filter(
+    (post) =>
+      Boolean(post.title) &&
+      Boolean(post.summary) &&
+      post.title !== 'GooglePlus' &&
+      !post.tags?.includes('歌词收录') &&
+      post.contentChars >= 500
+  )
+  const totalArticlePages = Math.ceil(articlePosts.length / ARTICLES_PER_PAGE)
+  const articlePaginationRoutes = Array.from(
+    { length: Math.max(totalArticlePages - 1, 0) },
+    (_, index) => {
+      const page = index + 2
+      const firstPostOnPage = articlePosts[(page - 1) * ARTICLES_PER_PAGE]
+      return {
+        url: `${siteUrl}/articles/page/${page}`,
         lastModified: firstPostOnPage?.lastmod || firstPostOnPage?.date || latestPostDate,
       }
     }
@@ -60,5 +82,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return routes
   })
 
-  return [...mainRoutes, ...blogPaginationRoutes, ...tagRoutes, ...articleRoutes]
+  return [
+    ...mainRoutes,
+    ...blogPaginationRoutes,
+    ...articlePaginationRoutes,
+    ...tagRoutes,
+    ...articleRoutes,
+  ]
 }
