@@ -1,5 +1,6 @@
 import Link from '@/components/Link'
 import Tag from '@/components/Tag'
+import Image from 'next/image'
 import { allBlogs } from 'contentlayer/generated'
 import { formatDate } from 'pliny/utils/formatDate'
 import siteMetadata from '@/data/siteMetadata'
@@ -20,6 +21,7 @@ export const articles = allBlogs
   .sort((a, b) => new Date(b.post.date).getTime() - new Date(a.post.date).getTime())
 
 const curatedArticlePaths = [
+  'blog/小说就是把自己混沌的思想定型/小说就是把自己混沌的思想定型-132',
   'blog/2025年9月-退休生活开启',
   'blog/黑神话：悟空',
   'blog/记录一下这个月发生的灾难',
@@ -116,6 +118,15 @@ function ArticleRow({
             <Tag key={tag} text={tag} />
           ))}
         </div>
+        {post.images?.[0] && (
+          <Image
+            src={post.images[0]}
+            alt={`Cover Image for ${post.title}`}
+            width={800}
+            height={400}
+            className="mt-5 rounded-lg object-cover"
+          />
+        )}
       </div>
       <span className="hidden pt-8 text-xl text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-primary-400 dark:text-gray-700 sm:block">
         →
@@ -153,7 +164,7 @@ export default function ArticlesArchive({ currentPage = 1 }: { currentPage?: num
               ChatGPT 严选
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              八篇关于人生、游戏与写作的代表作，由 ChatGPT 阅读整理后选出
+              九篇关于人生、游戏与写作的代表作，由 ChatGPT 阅读整理后选出
             </p>
           </div>
           {curatedArticles.map((item, index) => (

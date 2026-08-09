@@ -4,6 +4,7 @@ import readingTime from 'reading-time'
 import { slug } from 'github-slugger'
 import path from 'path'
 import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic'
+import { visit } from 'unist-util-visit'
 // Remark packages
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -26,6 +27,50 @@ import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer.js'
 
 const root = process.cwd()
 const isProduction = process.env.NODE_ENV === 'production'
+
+function hasLegacyLineBreaks(source: string, date: string) {
+  if (new Date(date).getFullYear() >= 2021) return false
+
+  let consecutiveProseLines = 0
+  let longestProseRun = 0
+  for (const rawLine of source.split('\n')) {
+    const line = rawLine.trim()
+    const isPlainProse =
+      line.length > 0 &&
+      line.length <= 120 &&
+      !/^(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|```|~~~|!\[|\[.*\]:|<[^>]+>)/.test(line)
+
+    if (isPlainProse) {
+      consecutiveProseLines += 1
+      longestProseRun = Math.max(longestProseRun, consecutiveProseLines)
+    } else {
+      consecutiveProseLines = 0
+    }
+  }
+
+  return longestProseRun >= 6
+}
+
+function remarkLegacyLineBreaks() {
+  return (tree: any, file: any) => {
+    const source = String(file.value)
+    const date = source.match(/^date:\s*["']?(.+?)["']?\s*$/m)?.[1]
+    if (!date || !hasLegacyLineBreaks(source.replace(/^---[\s\S]*?---/, ''), date)) return
+
+    visit(tree, 'paragraph', (node: { children: Array<{ type: string; value?: string }> }) => {
+      node.children = node.children.flatMap((child) => {
+        if (child.type !== 'text' || !child.value?.includes('\n')) return [child]
+        return child.value
+          .split('\n')
+          .flatMap((part, index, parts) =>
+            index < parts.length - 1
+              ? [{ type: 'text', value: part }, { type: 'break' }]
+              : [{ type: 'text', value: part }]
+          )
+      })
+    })
+  }
+}
 
 // heroicon mini link
 const icon = fromHtmlIsomorphic(
@@ -56,28 +101,7 @@ const computedFields: ComputedFields = {
   },
   legacyLineBreaks: {
     type: 'boolean',
-    resolve: (doc) => {
-      if (new Date(doc.date).getFullYear() >= 2021) return false
-
-      let consecutiveProseLines = 0
-      let longestProseRun = 0
-      for (const rawLine of doc.body.raw.split('\n')) {
-        const line = rawLine.trim()
-        const isPlainProse =
-          line.length > 0 &&
-          line.length <= 120 &&
-          !/^(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|```|~~~|!\[|\[.*\]:|<[^>]+>)/.test(line)
-
-        if (isPlainProse) {
-          consecutiveProseLines += 1
-          longestProseRun = Math.max(longestProseRun, consecutiveProseLines)
-        } else {
-          consecutiveProseLines = 0
-        }
-      }
-
-      return longestProseRun >= 6
-    },
+    resolve: (doc) => hasLegacyLineBreaks(doc.body.raw, doc.date),
   },
   slug: {
     type: 'string',
@@ -210,6 +234,7 @@ export default makeSource({
     cwd: process.cwd(),
     remarkPlugins: [
       remarkExtractFrontmatter,
+      remarkLegacyLineBreaks,
       [remarkGfm, { singleTilde: true }],
       remarkCodeTitles,
       remarkMath,
