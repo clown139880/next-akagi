@@ -9,6 +9,8 @@ import { unstable_ViewTransition as ViewTransition } from 'react'
 const MAX_DISPLAY = 5
 
 export default function Home({ posts }) {
+  const displayPosts = posts.slice(0, MAX_DISPLAY)
+
   return (
     <>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -25,23 +27,34 @@ export default function Home({ posts }) {
         </div>
         <ul className="space-y-2">
           {!posts.length && 'No posts found.'}
-          {posts.slice(0, MAX_DISPLAY).map((post) => {
+          {displayPosts.map((post, index) => {
             const { postId, slug, date, title, summary, tags, images } = post
             const isShortPost = !title
+            const followsShortPost = isShortPost && index > 0 && !displayPosts[index - 1].title
+            const precedesShortPost =
+              isShortPost && index < displayPosts.length - 1 && !displayPosts[index + 1].title
             return (
               <li key={postId + slug} className={isShortPost ? 'py-5' : 'py-10 sm:py-14'}>
                 <article
                   className={`relative transition-colors ${
                     isShortPost
-                      ? 'border-l border-primary-500/25 py-2 pl-6 sm:pl-8'
+                      ? 'py-2 pl-6 sm:pl-8'
                       : 'border-t border-gray-200 pt-10 dark:border-gray-800'
                   }`}
                 >
                   {isShortPost && (
-                    <span
-                      className="absolute -left-[5px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
-                      aria-hidden="true"
-                    />
+                    <>
+                      <span
+                        className={`absolute left-0 w-px bg-primary-500/25 ${
+                          followsShortPost ? '-top-5' : 'top-4'
+                        } ${precedesShortPost ? '-bottom-5' : 'bottom-0'}`}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="absolute -left-[4px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
+                        aria-hidden="true"
+                      />
+                    </>
                   )}
                   <div className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
                     <dl>

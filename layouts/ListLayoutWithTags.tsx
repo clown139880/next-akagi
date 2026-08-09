@@ -103,6 +103,12 @@ export default function ListLayoutWithTags({
   const sortedTags = tagKeys.sort((a, b) =>
     tagCounts[b].lastmod.localeCompare(tagCounts[a].lastmod)
   )
+  const currentTagSegment = pathname.split('/tags/')[1]?.split('/')[0]
+  const currentTag = currentTagSegment ? decodeURIComponent(currentTagSegment) : undefined
+  const visibleTags = sortedTags.slice(0, 30)
+  if (currentTag && !visibleTags.includes(currentTag) && tagCounts[currentTag]) {
+    visibleTags.push(currentTag)
+  }
 
   return (
     <>
@@ -126,10 +132,10 @@ export default function ListLayoutWithTags({
                 </Link>
               )}
               <ul>
-                {sortedTags.map((t) => {
+                {visibleTags.map((t) => {
                   return (
                     <li key={t} className="my-3">
-                      {pathname.split('/tags/')[1] === slug(t) ? (
+                      {currentTag === slug(t) ? (
                         <h3 className="inline px-3 py-2 text-sm font-bold uppercase text-primary-500">
                           {`${t} (${tagCounts[t].count})`}
                         </h3>
@@ -145,28 +151,47 @@ export default function ListLayoutWithTags({
                     </li>
                   )
                 })}
+                <li className="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
+                  <Link
+                    href="/tags"
+                    className="px-3 py-2 text-sm font-semibold text-primary-500 hover:text-primary-600"
+                  >
+                    查看全部标签 →
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
           <div>
             <ul className="space-y-2">
-              {posts.map((post) => {
+              {posts.map((post, index) => {
                 const { path, date, title, summary, tags, images } = post
                 const isShortPost = !title
+                const followsShortPost = isShortPost && index > 0 && !posts[index - 1].title
+                const precedesShortPost =
+                  isShortPost && index < posts.length - 1 && !posts[index + 1].title
                 return (
                   <li key={path} className={isShortPost ? 'py-4' : 'py-8'}>
                     <article
                       className={`relative flex flex-col space-y-3 ${
                         isShortPost
-                          ? 'border-l border-primary-500/25 py-2 pl-6 sm:pl-8'
+                          ? 'py-2 pl-6 sm:pl-8'
                           : 'border-t border-gray-200 pt-8 dark:border-gray-800'
                       }`}
                     >
                       {isShortPost && (
-                        <span
-                          className="absolute -left-[5px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
-                          aria-hidden="true"
-                        />
+                        <>
+                          <span
+                            className={`absolute left-0 w-px bg-primary-500/25 ${
+                              followsShortPost ? '-top-4' : 'top-4'
+                            } ${precedesShortPost ? '-bottom-4' : 'bottom-0'}`}
+                            aria-hidden="true"
+                          />
+                          <span
+                            className="absolute -left-[4px] top-4 h-[9px] w-[9px] rounded-full bg-primary-500 ring-4 ring-white dark:ring-gray-950"
+                            aria-hidden="true"
+                          />
+                        </>
                       )}
                       <dl>
                         <dt className="sr-only">Published on</dt>
