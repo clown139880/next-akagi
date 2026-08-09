@@ -2,7 +2,6 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { slug } from 'github-slugger'
 import { formatDate } from 'pliny/utils/formatDate'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
@@ -104,30 +103,15 @@ export default function ListLayoutWithTags({
   >
   const currentTagSegment = pathname.split('/tags/')[1]?.split('/')[0]
   const currentTag = currentTagSegment ? decodeURIComponent(currentTagSegment) : undefined
-  const preferredTags = [
-    '闲谈',
-    '动画',
-    '随笔',
-    '异度之刃2',
-    '命运石之门',
-    '不知所措才是人生',
-    '舞动青春',
-    '3月的狮子',
-  ]
-  const visibleTags = preferredTags.filter((tag) => tagCounts[tag])
-  if (currentTag && !visibleTags.includes(currentTag) && tagCounts[currentTag]) {
-    visibleTags.push(currentTag)
-  }
-
   return (
     <>
       <div className="mx-auto max-w-4xl">
-        <div className="border-b border-gray-200 pb-8 pt-10 dark:border-gray-800 md:pt-20">
+        <header className="pb-6 pt-10 md:pb-10 md:pt-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="mb-3 text-xs font-semibold tracking-[0.18em] text-primary-500">
-                {currentTag ? 'TAGGED WITH' : 'ARCHIVE'}
-              </p>
+              {currentTag && (
+                <p className="mb-3 text-xs font-semibold tracking-[0.18em] text-primary-500">TAG</p>
+              )}
               <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-gray-100 md:text-5xl">
                 {title}
               </h1>
@@ -140,38 +124,13 @@ export default function ListLayoutWithTags({
             {currentTag && (
               <Link
                 href="/tags"
-                className="text-sm font-medium text-primary-500 hover:text-primary-600"
+                className="text-sm text-gray-500 transition-colors hover:text-primary-500 dark:text-gray-400"
               >
-                查看所有标签 →
+                ← 标签与专题
               </Link>
             )}
           </div>
-          <nav className="mt-8 flex gap-2 overflow-x-auto pb-1" aria-label="常用标签">
-            <Link
-              href="/blog"
-              className={`shrink-0 rounded-full px-4 py-2 text-sm transition-colors ${
-                pathname.startsWith('/blog')
-                  ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                  : 'bg-gray-100 text-gray-600 hover:text-primary-500 dark:bg-gray-900 dark:text-gray-300'
-              }`}
-            >
-              全部
-            </Link>
-            {visibleTags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/tags/${slug(tag)}`}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm transition-colors ${
-                  currentTag === slug(tag)
-                    ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                    : 'bg-gray-100 text-gray-600 hover:text-primary-500 dark:bg-gray-900 dark:text-gray-300'
-                }`}
-              >
-                {tag} <span className="ml-1 opacity-50">{tagCounts[tag].count}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
+        </header>
         <div>
           <ul>
             {posts.map((post, index) => {
