@@ -6,21 +6,10 @@ import siteMetadata from '@/data/siteMetadata'
 import { genPageMetadata } from 'app/seo'
 
 export const metadata = genPageMetadata({
-  title: '长文',
-  description: 'UniClown 博客中值得慢慢阅读的长篇文章与旧文拾遗。',
+  title: 'Articles',
+  description: 'UniClown 博客中完整文章、专题写作与值得重读的旧文。',
   alternates: { canonical: '/essays' },
 })
-
-function textLength(source: string) {
-  return source
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    .replace(/```[\s\S]*?```/g, '')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/[>*_`~|-]/g, '')
-    .replace(/https?:\/\/\S+/g, '')
-    .replace(/\s/g, '').length
-}
 
 const longPosts = allBlogs
   .filter(
@@ -31,8 +20,8 @@ const longPosts = allBlogs
       post.title !== 'GooglePlus' &&
       !post.tags?.includes('歌词收录')
   )
-  .map((post) => ({ post, length: textLength(post.body.raw) }))
-  .filter(({ length }) => length >= 1200)
+  .map((post) => ({ post, length: post.contentChars }))
+  .filter(({ length }) => length >= 700)
 
 const recentPosts = [...longPosts]
   .filter(({ post }) => new Date(post.date).getFullYear() >= 2021)
@@ -87,12 +76,14 @@ export default function EssaysPage() {
   return (
     <div className="mx-auto max-w-4xl pb-16 pt-10 md:pt-24">
       <header className="mb-14 max-w-3xl">
-        <p className="mb-4 text-sm font-semibold tracking-[0.18em] text-primary-500">LONG READS</p>
+        <p className="mb-4 text-sm font-semibold tracking-[0.18em] text-primary-500">
+          CURATED WRITING
+        </p>
         <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 md:text-6xl">
-          值得慢慢读的文章
+          Articles
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-gray-500 dark:text-gray-400">
-          从时间线里暂时抽离出来。这里收录拥有完整主题、足够篇幅，值得重新被看见的文章。
+          文章与长篇。从时间线里暂时抽离出来，集中陈列拥有完整主题、值得重新被看见的写作。
         </p>
       </header>
 
@@ -103,9 +94,9 @@ export default function EssaysPage() {
               id="recent-longreads"
               className="text-2xl font-bold text-gray-900 dark:text-gray-100"
             >
-              最近长文
+              最近文章
             </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">近几年写下的完整文章</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">近几年写下的正式文章</p>
           </div>
           {recentPosts.map((item, index) => (
             <ArticleRow key={item.post.path} item={item} index={index} />
@@ -122,7 +113,7 @@ export default function EssaysPage() {
             旧文拾遗
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            从旧时间线里重新捞出的长篇，优先展示正文更完整的文章
+            从旧时间线里重新捞出的文章，优先展示内容更完整的写作
           </p>
         </div>
         {rediscoveredPosts.map((item, index) => (

@@ -42,6 +42,18 @@ const icon = fromHtmlIsomorphic(
 
 const computedFields: ComputedFields = {
   readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+  contentChars: {
+    type: 'number',
+    resolve: (doc) =>
+      doc.body.raw
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/[>*_`~|-]/g, '')
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/\s/g, '').length,
+  },
   legacyLineBreaks: {
     type: 'boolean',
     resolve: (doc) => {
@@ -98,8 +110,8 @@ function createTagCount(allBlogs) {
   > = {}
   allBlogs.forEach((file) => {
     if (file.tags && (!isProduction || file.draft !== true)) {
-      const contentChars = file.body.raw.replace(/\s/g, '').length
-      const isLongPost = Boolean(file.title) && contentChars >= 1200
+      const contentChars = file.contentChars
+      const isLongPost = Boolean(file.title) && contentChars >= 700
       file.tags.forEach((tag) => {
         const formattedTag = slug(tag)
         if (formattedTag in tagCount) {

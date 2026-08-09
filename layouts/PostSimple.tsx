@@ -17,7 +17,7 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, next, prev, children }: LayoutProps) {
-  const { path, slug, date, title, legacyLineBreaks } = content
+  const { path, slug, date, title, legacyLineBreaks, contentChars } = content
 
   return (
     <SectionContainer>
@@ -31,6 +31,14 @@ export default function PostLayout({ content, next, prev, children }: LayoutProp
                   <dt className="sr-only">Published on</dt>
                   <dd className="text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
                     <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                    {title && contentChars > 0 && (
+                      <>
+                        <span className="mx-2" aria-hidden="true">
+                          ·
+                        </span>
+                        <span>{contentChars.toLocaleString('zh-CN')} 字</span>
+                      </>
+                    )}
                   </dd>
                 </div>
               </dl>

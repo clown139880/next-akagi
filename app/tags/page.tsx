@@ -87,7 +87,7 @@ export default async function Page() {
                   {tag}
                 </span>
                 <span className="whitespace-nowrap text-xs text-gray-400">
-                  {stats.longPosts} 长文 / {stats.count} 篇
+                  {stats.longPosts} 篇文章 / {stats.count} 篇内容
                 </span>
               </Link>
             )

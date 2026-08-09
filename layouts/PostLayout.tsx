@@ -31,7 +31,7 @@ interface LayoutProps {
 }
 
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
-  const { filePath, path, slug, date, title, tags, legacyLineBreaks } = content
+  const { filePath, path, slug, date, title, tags, legacyLineBreaks, contentChars } = content
   const basePath = path.split('/')[0]
 
   return (
@@ -48,6 +48,14 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                     <time dateTime={date}>
                       {new Date(date).toLocaleDateString(siteMetadata.locale, postDateTemplate)}
                     </time>
+                    {title && contentChars > 0 && (
+                      <>
+                        <span className="mx-2" aria-hidden="true">
+                          ·
+                        </span>
+                        <span>{contentChars.toLocaleString('zh-CN')} 字</span>
+                      </>
+                    )}
                   </dd>
                 </div>
               </dl>

@@ -196,7 +196,7 @@ export default function ListLayoutWithTags({
           <div className="min-w-0">
             <ul>
               {posts.map((post, index) => {
-                const { path, date, title, summary, tags, images } = post
+                const { path, date, title, summary, tags, images, contentChars } = post
                 const isShortPost = !title && tags?.includes('闲谈')
                 const followsShortPost = isShortPost && index > 0 && !posts[index - 1].title
                 const precedesShortPost =
@@ -233,6 +233,12 @@ export default function ListLayoutWithTags({
                             className="inline-flex items-center gap-2 hover:text-primary-500"
                           >
                             <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                            {title && contentChars > 0 && (
+                              <>
+                                <span aria-hidden="true">·</span>
+                                <span>{contentChars.toLocaleString('zh-CN')} 字</span>
+                              </>
+                            )}
                           </Link>
                         </dd>
                       </dl>

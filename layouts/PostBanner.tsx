@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import Image from '@/components/Image'
+import { formatDate } from 'pliny/utils/formatDate'
 import Bleed from 'pliny/ui/Bleed'
 import { CoreContent } from 'pliny/utils/contentlayer'
 import type { Blog } from 'contentlayer/generated'
@@ -18,7 +19,7 @@ interface LayoutProps {
 }
 
 export default function PostMinimal({ content, next, prev, children }: LayoutProps) {
-  const { slug, title, images, legacyLineBreaks } = content
+  const { slug, title, date, images, legacyLineBreaks, contentChars } = content
   const displayImage =
     images && images.length > 0 ? images[0] : 'https://picsum.photos/seed/picsum/800/400'
 
@@ -36,6 +37,17 @@ export default function PostMinimal({ content, next, prev, children }: LayoutPro
               </Bleed>
             </div>
             <div className="relative pt-10">
+              <p className="mb-3 text-base font-medium leading-6 text-gray-500 dark:text-gray-400">
+                <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                {title && contentChars > 0 && (
+                  <>
+                    <span className="mx-2" aria-hidden="true">
+                      ·
+                    </span>
+                    <span>{contentChars.toLocaleString('zh-CN')} 字</span>
+                  </>
+                )}
+              </p>
               <PageTitle>{title}</PageTitle>
             </div>
           </div>
