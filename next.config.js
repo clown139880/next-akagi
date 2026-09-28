@@ -13,7 +13,7 @@ const ContentSecurityPolicy = `
   media-src *.s3.amazonaws.com;
   connect-src *;
   font-src 'self';
-  frame-src giscus.app disqus.com
+  frame-src giscus.app disqus.com player.bilibili.com
 `
 
 const securityHeaders = [

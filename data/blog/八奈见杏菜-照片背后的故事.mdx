@@ -1,0 +1,61 @@
+---
+title: 八奈见杏菜-照片背后的故事
+date: 2026-09-28 20:00:00
+lastmod: 2026-09-28 20:00:00
+tags:
+  - 败犬女主太多了
+  - MiniMax-H3
+  - AIGC
+draft: false
+summary: 镜头里的她安静而绝美，快门落下的那一刻，才是故事真正的开始。
+---
+
+镜头里的老八安静又绝美，快门落下的那一刻，故事才真正开始。
+
+AI 演绎小剧场整的活，竖屏故事，11 秒，主打一个氛围感，看完记得回来。
+
+<Bili bvid="BV1sBaa6JEXx" vertical />
+
+## 照片背后，其实藏了一整段戏
+
+这条片子的剧本只有一句人话：**「本来活蹦乱跳的女朋友，突然走到我面前装文静，让我拍照。」**
+
+照片里那份文静，是她在你镜头前装出来的。这个反差，就是全部的戏。
+
+## 怎么做的
+
+工序上分三步：
+
+1. 先用 SDXL/Qwen 出她的「身份图」——驼色大衣 + 米白卫衣、蓝长直发带呆毛，往纯蓝渐变背景前一站，文静绝美；
+2. 再用 Qwen 把同一张图改成「没人举相机时的她」——咧嘴大笑、比 V、蹦跳，同款大衣同款背景，只是整个人活了过来；
+3. 最后交给 MiniMax-H3 做图生视频（REF2VA 参考生视频），一条提示词把过程写死：绝美定格 → 男友举起手机 → 快门咔哒 → 他放下手机 → 她从取景器里一步踏回鲜活。
+
+中间迭代了五六版。逐帧挑毛病：说「活蹦乱跳太夸张用力了」就收敛成轻快版，说「写简单一点」就删掉动作清单，说「不要生成首帧、直接让模型画开头、只锁尾帧」就换成 L2VA 单尾帧模式……折腾一圈最后还是你一句话点醒：还是「从相机里走出来」那版正宗，于是回到简单版定稿。
+
+每出片一版，都先用本地视觉模型复查画面达不达标，才敢发出来挑。渲染那台机器当晚还睡着过一次，Wake-on-LAN 敲醒接着渲。成片 800×1120 竖屏 12 秒，剪成 11 秒投 B 站 + 小红书双平台。
+
+投稿路上还踩了两个坑：一开始分区选错投进音乐区，删了重投动画区；又发现「打 tag」和真「进话题活动」是两回事（上一篇 combo 就是这么漏掉活动参与的），这版换了姿势挂上「AI演绎小剧场」话题，创作声明也老老实实勾了「含 AI 生成内容」。
+
+## 生成提示词（原样分享）
+
+```text
+<Picture 1> provides the opening scene and her design: a breathtaking close-up of a serene, luminous anime
+girl with long straight blue hair and a small tuft on top, wearing an oversized camel coat over a cream
+hoodie, against a cool blue gradient — elegant, still, quietly beautiful. <Picture 2> is the SAME girl in
+her real, everyday energy: bright, bouncy and playful, full of life.
+At 0.00 seconds the shot is exactly <Picture 1>: her boyfriend is photographing her with his phone, a
+first-person view through the phone, and she stays quiet and beautiful for the camera. A soft clear phone
+shutter click: the photo is taken. He lowers the phone — and in one light, natural motion she steps right
+out of the picture-perfect stillness into her real self from <Picture 2>: bright and happy, a cheerful
+smile and a playful sparkle in her eyes, turning toward him with light, effortless energy, hair and coat
+swaying naturally. She holds this bright, alive state as the cheerful ending.
+Motion is one continuous believable flow, natural and light, never heavy or exaggerated — single direction:
+still once, then once lively, then holds; no repeating, no return, no cuts, no teleporting; character
+design locked from first frame to last; camera slow, steady, small amplitude at slow speed throughout.
+
+overall_soundscape: a soft breeze, a clear phone shutter click mid-way, then her happy laughter gently fading.
+
+non_diegetic_music: N/A
+```
+
+生成参数：REF2VA 双参考图（文静近景 + 活力拼贴）· seed 975201 · 12s · 800×1120 · 1600kbps 级别 · H.264。

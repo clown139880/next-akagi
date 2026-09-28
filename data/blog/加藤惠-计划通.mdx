@@ -1,0 +1,73 @@
+---
+title: 加藤惠-计划通
+date: 2026-09-28 21:20:00
+lastmod: 2026-09-28 21:20:00
+tags:
+  - 加藤惠
+  - 路人女主的养成方法
+  - MiniMax-H3
+  - AIGC
+  - 死亡笔记
+draft: false
+summary: 让加藤惠去演死亡笔记那段名场面，翻车四版才想明白：一个镜头得单独喂一张参考图。
+---
+
+死亡笔记里那段「完全符合计划」，我把人换了——换成加藤惠。衣服、站位、动作、连那句「計画通り」的声音都还是原片那条，只有人变成了我惠。
+
+<Bili bvid="BV1esaV6LEzH" />
+
+10 秒，2304×1312，48fps。
+
+## 怎么做的
+
+起点是原片 1:26 前后那段名场面。第一步本来想偷懒：截下 1:23 那一帧，让 SDXL 用 img2img 保着构图把她画出来（红光眼、咧嘴笑、嘴前那根耳麦吊杆都留着）。试了两版，像倒是挺像，但一帧终究只是一帧。
+
+那就干脆把 1:16–1:26 那段整条丢给 H3。H3 是支持参考视频的（REF2VA 模式）：参考额度是图 9 张 / 视频 3 条 / 音频 3 条，参考片每条 2–15 秒，提示词还得按官方的六段式写（对象定义 / 概述 / 保留分析 / 分镜描述 / 环境音 / 配乐）。
+
+翻车就翻在这儿。一开始只喂一张身份图，结果中段那个男生的镜头还是他自己；补一张「黑西装、白衬衫、戴耳麦、手拿笔记本」的服装图，中段好了，特写又不像惠了；再补一张眼睛特写，反倒变成只有那一格像她。折腾到第五版才想明白一件事——**H3 是按镜头抓参考图的，每类镜头都得单独给它一张**：身份、正面服装、面部特写、3/4 侧、中景站姿、眼睛特写，一共 6 张；然后在提示词里指名道姓地写：这一镜用第 3 号图，那一镜用第 6 号图。身份图里她穿的是水手服，所以还得专门交代一句「这身衣服不许抄」。
+
+声音也是个坑：参考音频标上 fully_copy，理论上会把原声照搬过来，实测不生效——出来还是模型自己编的动静。最后的做法是让它只出画面，音轨用 ffmpeg 把原片段那条贴回去。核验方法很土但很准：量音轨谱均值，−20.1 dB 和原片段对上了，就是原声。
+
+还有，成片不是某一版直接过的。这是 **v5 的前 5 秒 + v3 的后 5 秒**拼的——各出一半，接在动作的间隙上，音轨也正好拼回完整的那 10 秒。
+
+出片之后才放大插帧：RealESRGAN 的 anime 模型放大，降到 2304×1312，再用 RIFE 4.9 插到 48fps。这里又是工程坑——帧在内存里是按 float32 全量摆着的，480 帧 2K 一次跑就是 17GB 起步，那台机器总共才 50GB 内存，所以切成 3 段（80 帧一段）跑完再拼回去。
+
+## 生成提示词
+
+```text
+subject_definitions:
+<Subject 1> is the girl shown in <Picture 1> to <Picture 5>: a Japanese girl with a chin-length brown bob, brown eyes and a soft round face. She is the only person in the whole video, in every single shot.
+<Picture 1> is the identity reference: use it for her face, hairstyle, eyes and the hand-to-face gesture. The sailor uniform she wears in <Picture 1> must NOT be copied - her costume comes from <Picture 2> to <Picture 5>.
+<Picture 2> is the wardrobe reference: front half-body in a black suit jacket, white dress shirt, dark red tie, black over-ear headset with a slim boom microphone, holding a black notebook.
+<Picture 3> is the facial close-up reference in the same suit and headset - use it for the tight shots of her face.
+<Picture 4> is the three-quarter view reference in the same suit and headset - use it whenever her head turns.
+<Picture 5> is the medium wide shot reference in the same suit and headset, standing behind a studio microphone - use it for the wider shots.
+<Picture 6> is the eye reference for the second shot: one large brown eye of a young girl with long eyelashes.
+<Video 1> is the performance reference: it supplies the broadcast-studio framing, the low camera angles, the pacing, the position behind the microphone and the sinister smirk of the boy in it.
+<Audio 1> is the source audio of <Video 1>: the spoken Japanese line and the background music.
+
+summary:
+[reference generation + audio reference] Replace the boy in <Video 1> with <Subject 1>: keep her face exactly like <Picture 1> and <Picture 3> in every shot - the tightest close-up and the widest shot alike - and dress her in the black suit, dark tie and headset of <Picture 2> to <Picture 5>, holding his black notebook. She takes his place behind the microphone and copies his sinister smirk and gaze shot by shot. No male character appears anywhere in the video, and no frame of <Video 1> is reused as-is. Keep the dialogue and music of <Audio 1> as the final audio track.
+
+retention_analysis:
+<Subject 1> (appears in every shot, from extreme close-up to wide): fully_preserved - her face, chin-length brown bob, brown eyes and eyelashes stay exactly consistent with <Picture 1> and <Picture 3>.
+<Picture 1> (identity and gesture): fully_preserved for her face, hair and eyes only; its sailor uniform is ignored.
+<Picture 2> (front wardrobe): attribute_transfer - the black suit, white shirt, dark red tie, headset and the black notebook are applied to <Subject 1>.
+<Picture 3> (close-up wardrobe and face): attribute_transfer - the same suit, tie and headset in her close shots.
+<Picture 4> (three-quarter wardrobe): attribute_transfer - the same outfit and headset when her head turns.
+<Picture 5> (wide wardrobe): attribute_transfer - the same outfit, headset and the position behind the studio microphone.
+<Picture 6> (eye close-up in the second shot): fully_preserved - the eye shown in the second shot is a girl's large brown eye with long lashes, exactly as in <Picture 6>, never a man's eye and never a red iris.
+<Video 1> (framing, camera, pacing and expression): weak_reference - the extreme close-ups, the low angles, the gesture and the sinister smirk are transferred to <Subject 1>; the person of <Video 1> is never reproduced, not as a face, an eye, a hand or a silhouette.
+<Audio 1> (original spoken line and background music): fully_copy - the original audio is kept as the final audio track.
+
+detailed_description:
+[Shot 1] At 00:00.000, an extreme close-up of <Subject 1> as in <Picture 3>, in a dark broadcast studio, her face half in shadow under harsh blue and violet key light, the black headset over her ear with its single slim boom microphone beside her cheek, pointing at the corner of her mouth; she narrows her eyes and a faint smirk forms on her lips. At 00:02.500, the camera cuts to an extreme close-up of her own eye, matching <Picture 6>: one large brown iris, long feminine eyelashes, a thin soft eyebrow, catching the hard light. At 00:05.000, a low-angle shot looks up along her chin and jaw as in <Picture 2>, the boom microphone in front of her mouth, and her slim hand holds up the black notebook with the words "DEATH NOTE" on its cover. At 00:08.000, back to her face as in <Picture 3>: the smirk widens into a sinister grin as she looks straight into the camera, the notebook still in frame, holding the expression until the end of the shot.
+
+overall_soundscape:
+Dark studio room tone, a faint hum of broadcast equipment, one soft laugh through her nose underneath the original music.
+
+non_diegetic_music:
+N/A
+```
+
+生成参数：MiniMax H3 REF2VA（参考图 6 张 + 参考视频 1 条 V+A）· Turbo 6 步 · 1152×656 @24fps → RealESRGAN x4plus anime 放大 → 2304×1312 → RIFE 4.9 ×2 插帧 → 48fps · 音轨用 ffmpeg 后期贴回原片段。

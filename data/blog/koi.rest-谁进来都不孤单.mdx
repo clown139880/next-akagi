@@ -1,0 +1,51 @@
+---
+title: Show HN 225 分｜他在网上养了三尾鱼：谁进来都不孤单（koi.rest）
+date: 2026-09-28 00:46:53
+lastmod: 2026-09-28 21:45:00
+tags:
+  - Show HN
+  - koi.rest
+  - 科技
+  - 治愈
+  - AIGC
+  - MiniMax-H3
+  - 加藤惠
+draft: false
+summary: Show HN 225 分的 koi.rest：一个谁都进得来、谁也不用开口的锦鲤池。让惠念给你听。
+---
+
+Show HN 上刷到 koi.rest，225 分。作者说他刻意留了三尾锦鲤——有人进来就多一条，「这样哪怕只有你一个人，池子也不孤单」。
+
+有人盯了十分钟，发现池子里来了十尾鱼、还不停闪进闪出，后来才明白：那些闪进闪出的，是此刻正跟你看着同一片水的陌生人。有人管这叫「数字第三空间」，像极了当年电脑上的水族馆屏保；还有人吐槽鱼出场的帧率，作者本人回复：我自己两台桌面加手机都不卡，这锅我不背（「vibe-code problem」，笑死）。
+
+110 秒，让惠念给你听。
+
+<Bili bvid="BV1kQae67ENw" />
+
+## 怎么做的
+
+画面和声音不是一起生的，是两套活拼起来的。
+
+**稿子**：内容基本照抄那条讨论的原话（三条鱼的设定、闪进闪出的陌生人、帧率之争），拆成 7 段旁白。惠的声音是本地 TTS 跑的——模型是拿日语训的，念英文域名怎么都不对（「Koi」还行，「.rest」直接翻车），试了几轮之后放弃治疗：**配音里干脆不念网址，改成字幕打在画面上**。字幕是脚本生成的 ASS 文件烧进视频的，顺手也解决了「哪个字该在哪一秒出现」。
+
+**网站画面**：靠浏览器自动化录屏，同一个抓站脚本一路改到第 11 版（`koi_exp5` 到 `koi_exp11`）。不是脚本难写，是这网站本身太活——鱼是随机游的，得等到池子里真的聚起一群鱼、再顺手把左边那排环境音开关和右上角的计时器点到，录出来的才像样。最后成片里那几段池子镜头，是几个不同版本里各自最稳的片段剪出来、再循环补满旁白的长度。
+
+**惠出镜**：开场问候、讲解、告别这三段是箱子上的 ComfyUI 里用 **MiniMax H3 的图生视频（I2VA）** 出的——一张人设图、每段 5 秒、1280×736，三段各配一个固定 seed，提示词写的都是「保持这个人、这个房间、桌上的笔记本和茶杯，然后眨眼 / 挥手 / 托腮看你一眼」这类小动作。**注意它只出画面，声音全是后配的**。
+
+**收尾**：ffmpeg 把这些片段按旁白节奏拼起来（录屏各自裁到该进的秒数），烧字幕、结尾淡出、贴上 7 段旁白合成的那条音轨——成品 1920×1080 / 30fps，110 秒。
+
+## 生成提示词
+
+开场那段（`sc01_greet`）：
+
+```text
+For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
+
+integrated_multimodal_description: [Shot 1] Anime illustration style, the brown-haired girl shown in <Picture 1> remains seated at the wooden desk, preserving her long straight brown hair, blunt bangs, ahoge, brown eyes, outfit, the laptop and cup of tea on the desk, and the cozy evening room with the bookcase behind. The camera holds a gentle static shot. She blinks softly twice, then lifts her hand in a small warm greeting wave toward the viewer, her calm smile widening a little, strands of long hair swaying subtly as she greets.
+
+overall_soundscape: Quiet cozy room, faint laptop hum, distant evening ambience.
+
+non_diegetic_music: N/A
+```
+
+生成参数：MiniMax H3 I2VA（图生视频）· int8 · 1280×736 · 5 秒 · 固定 seed `20260927101`（另外两段分别是 `...102` / `...104`，同一套提示词骨架换动作）。
